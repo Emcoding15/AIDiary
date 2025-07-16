@@ -1,0 +1,597 @@
+import 'dart:async';
+import 'dart:math';
+import 'package:flutter/material.dart';
+import '../models/journal_entry.dart';
+import '../services/recording_service.dart';
+import 'package:uuid/uuid.dart';
+import '../config/theme.dart';
+
+class RecordScreen extends StatefulWidget {
+  const RecordScreen({Key? key}) : super(key: key);
+
+  @override
+  State<RecordScreen> createState() => _RecordScreenState();
+}
+
+class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMixin {
+  bool _isRecording = false;
+  bool _isPaused = false;
+  int _recordingDuration = 0;
+  final TextEditingController _titleController = TextEditingController();
+  final RecordingService _recordingService = RecordingService();
+  late Timer _timer;
+  final Uuid _uuid = const Uuid();
+  
+  // Animation controllers
+  late AnimationController _micAnimationController;
+  late AnimationController _pulseAnimationController;
+  late AnimationController _waveformAnimationController;
+  
+  // Amplitude data for visualization
+  final List<double> _amplitudeHistory = List.filled(30, 0.1);
+  double _currentAmplitude = 0.1;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPermission();
+    
+    // Initialize animation controllers
+    _micAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    
+    _pulseAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    
+    _waveformAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 750),
+    )..repeat();
+  }
+
+  Future<void> _checkPermission() async {
+    final hasPermission = await _recordingService.checkPermission();
+    if (!hasPermission) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Microphone permission is required to record audio'),
+            backgroundColor: AppTheme.errorColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    if (_isRecording) {
+      _stopTimer();
+      _recordingService.cancelRecording();
+    }
+    _recordingService.dispose();
+    _micAnimationController.dispose();
+    _pulseAnimationController.dispose();
+    _waveformAnimationController.dispose();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (_isRecording && !_isPaused) {
+        setState(() {
+          if (timer.tick % 10 == 0) {
+            _recordingDuration++;
+          }
+        });
+        _updateAmplitude();
+      }
+    });
+  }
+
+  void _stopTimer() {
+    _timer.cancel();
+  }
+
+  Future<void> _updateAmplitude() async {
+    if (_isRecording && !_isPaused) {
+      final amplitude = await _recordingService.getAmplitude() ?? 0.0;
+      // Normalize amplitude to 0-1 range for visualization
+      setState(() {
+        // Shift amplitude history
+        for (int i = 0; i < _amplitudeHistory.length - 1; i++) {
+          _amplitudeHistory[i] = _amplitudeHistory[i + 1];
+        }
+        
+        // Add new amplitude to history
+        _currentAmplitude = (amplitude / 100).clamp(0.1, 1.0);
+        _amplitudeHistory[_amplitudeHistory.length - 1] = _currentAmplitude;
+      });
+    }
+  }
+
+  Future<void> _toggleRecording() async {
+    if (_isRecording) {
+      // Stop recording
+      await _stopRecording();
+    } else {
+      // Start recording
+      await _startRecording();
+    }
+  }
+
+  Future<void> _startRecording() async {
+    try {
+      await _recordingService.startRecording();
+      setState(() {
+        _isRecording = true;
+        _isPaused = false;
+        _recordingDuration = 0;
+        _currentAmplitude = 0.1;
+        _amplitudeHistory.fillRange(0, _amplitudeHistory.length, 0.1);
+      });
+      _startTimer();
+      _micAnimationController.forward();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to start recording: ${e.toString()}'),
+          backgroundColor: AppTheme.errorColor,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    final path = await _recordingService.stopRecording();
+    _stopTimer();
+    setState(() {
+      _isRecording = false;
+      _isPaused = false;
+    });
+    _micAnimationController.reverse();
+    
+    if (path != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Recording saved successfully'),
+          backgroundColor: AppTheme.successGreen,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _pauseResumeRecording() async {
+    if (_isPaused) {
+      // Resume recording
+      await _recordingService.resumeRecording();
+      setState(() {
+        _isPaused = false;
+      });
+    } else {
+      // Pause recording
+      await _recordingService.pauseRecording();
+      setState(() {
+        _isPaused = true;
+      });
+    }
+  }
+
+  Future<void> _saveRecording() async {
+    if (_isRecording) {
+      await _stopRecording();
+    }
+    
+    if (_titleController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please enter a title for your journal entry'),
+          backgroundColor: AppTheme.warningAmber,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+          ),
+        ),
+      );
+      return;
+    }
+    
+    // Get the file path of the recording
+    final audioPath = _recordingService.currentFilePath;
+    if (audioPath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No recording found to save'),
+          backgroundColor: AppTheme.errorColor,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+          ),
+        ),
+      );
+      return;
+    }
+    
+    // Create a new journal entry
+    final journalEntry = JournalEntry(
+      id: _uuid.v4(),
+      title: _titleController.text,
+      date: DateTime.now(),
+      audioPath: audioPath,
+    );
+    
+    // Return the entry to the calling screen
+    Navigator.pop(context, journalEntry);
+  }
+
+  String _formatDuration(int seconds) {
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Record Journal Entry'),
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Title input field
+              TextField(
+                controller: _titleController,
+                decoration: InputDecoration(
+                  labelText: 'Entry Title',
+                  hintText: 'Give your journal entry a title',
+                  prefixIcon: const Icon(Icons.title_rounded),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                  ),
+                ),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              
+              const SizedBox(height: 40),
+              
+              // Recording timer
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      _formatDuration(_recordingDuration),
+                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: _isRecording 
+                            ? (_isPaused ? AppTheme.warningAmber : AppTheme.recordingRed)
+                            : AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _isRecording
+                          ? (_isPaused ? 'Recording Paused' : 'Recording in Progress')
+                          : 'Ready to Record',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: _isRecording
+                            ? (_isPaused ? AppTheme.warningAmber : AppTheme.recordingRed)
+                            : AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 40),
+              
+              // Audio visualization
+              Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                  boxShadow: AppTheme.lightShadow,
+                ),
+                child: _isRecording
+                    ? _buildWaveformVisualizer()
+                    : _buildMicrophoneAnimation(),
+              ),
+              
+              const SizedBox(height: 40),
+              
+              // Record button
+              AnimatedContainer(
+                duration: AppTheme.shortAnimationDuration,
+                height: 80,
+                width: 80,
+                child: ElevatedButton(
+                  onPressed: _toggleRecording,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isRecording ? AppTheme.recordingRed : Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.zero,
+                    shape: const CircleBorder(),
+                    elevation: 4,
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: AppTheme.shortAnimationDuration,
+                    child: Icon(
+                      _isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+                      key: ValueKey<bool>(_isRecording),
+                      size: 36,
+                    ),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Additional controls
+              if (_isRecording) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Pause/Resume button
+                    ElevatedButton.icon(
+                      onPressed: _pauseResumeRecording,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _isPaused
+                            ? Theme.of(context).colorScheme.primary
+                            : AppTheme.warningAmber,
+                        foregroundColor: Colors.white,
+                      ),
+                      icon: Icon(_isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded),
+                      label: Text(_isPaused ? 'Resume' : 'Pause'),
+                    ),
+                    const SizedBox(width: 16),
+                    // Save button
+                    ElevatedButton.icon(
+                      onPressed: _saveRecording,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.successGreen,
+                        foregroundColor: Colors.white,
+                      ),
+                      icon: const Icon(Icons.save_rounded),
+                      label: const Text('Save'),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                // Save button (disabled until recording is made)
+                Center(
+                  child: ElevatedButton.icon(
+                    onPressed: _recordingService.currentFilePath != null ? _saveRecording : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.successGreen,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.grey.shade300,
+                    ),
+                    icon: const Icon(Icons.save_rounded),
+                    label: const Text('Save Entry'),
+                  ),
+                ),
+              ],
+              
+              const SizedBox(height: 16),
+              
+              // Recording tips
+              if (!_isRecording) ...[
+                const SizedBox(height: 24),
+                Card(
+                  elevation: 0,
+                  color: Theme.of(context).colorScheme.surface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                    side: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(0.2)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.lightbulb_outline_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Recording Tips',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        _buildTipItem('Find a quiet place to record'),
+                        _buildTipItem('Speak clearly and at a normal pace'),
+                        _buildTipItem('Keep the phone about 6-12 inches from your mouth'),
+                        _buildTipItem('Add a title that helps you remember this entry'),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildTipItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildMicrophoneAnimation() {
+    return Center(
+      child: AnimatedBuilder(
+        animation: _pulseAnimationController,
+        builder: (context, child) {
+          return Container(
+            width: 80 + (20 * _pulseAnimationController.value),
+            height: 80 + (20 * _pulseAnimationController.value),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1 * (1 - _pulseAnimationController.value)),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                width: 2,
+              ),
+            ),
+            child: Icon(
+              Icons.mic_rounded,
+              size: 40,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          );
+        },
+      ),
+    );
+  }
+  
+  Widget _buildWaveformVisualizer() {
+    return AnimatedBuilder(
+      animation: _waveformAnimationController,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: WaveformPainter(
+            amplitudes: _amplitudeHistory,
+            color: _isPaused ? AppTheme.warningAmber : AppTheme.recordingRed,
+            animationValue: _waveformAnimationController.value,
+          ),
+          child: Container(),
+        );
+      },
+    );
+  }
+}
+
+class WaveformPainter extends CustomPainter {
+  final List<double> amplitudes;
+  final Color color;
+  final double animationValue;
+  
+  WaveformPainter({
+    required this.amplitudes,
+    required this.color,
+    required this.animationValue,
+  });
+  
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    
+    final width = size.width;
+    final height = size.height;
+    final centerY = height / 2;
+    
+    final path = Path();
+    final barWidth = width / amplitudes.length;
+    
+    path.moveTo(0, centerY);
+    
+    for (int i = 0; i < amplitudes.length; i++) {
+      final x = i * barWidth;
+      final normalizedAmplitude = amplitudes[i];
+      
+      // Add some randomness for a more natural look
+      final randomFactor = sin((i * 0.4) + (animationValue * 2 * pi)) * 0.1;
+      final adjustedAmplitude = normalizedAmplitude * (1 + randomFactor);
+      
+      final barHeight = adjustedAmplitude * (height * 0.4);
+      
+      // Draw top wave
+      path.lineTo(x, centerY - barHeight);
+      path.lineTo(x + barWidth * 0.5, centerY - (barHeight * 0.8));
+      
+      // Draw bottom wave (mirror of top)
+      if (i == amplitudes.length - 1) {
+        path.lineTo(width, centerY);
+        path.lineTo(width, centerY);
+        path.lineTo(x + barWidth * 0.5, centerY + (barHeight * 0.8));
+      }
+    }
+    
+    // Complete bottom wave
+    for (int i = amplitudes.length - 1; i >= 0; i--) {
+      final x = i * barWidth;
+      final normalizedAmplitude = amplitudes[i];
+      
+      // Add some randomness for a more natural look
+      final randomFactor = sin((i * 0.4) + (animationValue * 2 * pi)) * 0.1;
+      final adjustedAmplitude = normalizedAmplitude * (1 + randomFactor);
+      
+      final barHeight = adjustedAmplitude * (height * 0.4);
+      
+      path.lineTo(x, centerY + barHeight);
+      if (i > 0) {
+        path.lineTo(x - barWidth * 0.5, centerY + (barHeight * 0.8));
+      }
+    }
+    
+    path.close();
+    
+    // Fill with gradient
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          color.withOpacity(0.6),
+          color.withOpacity(0.2),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, 0, width, height));
+    
+    canvas.drawPath(path, fillPaint);
+    canvas.drawPath(path, paint);
+  }
+  
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
+  }
+} 
