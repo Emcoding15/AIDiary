@@ -62,7 +62,7 @@ class AIService {
           temperature: 0.0, // Zero temperature for most deterministic output
           topK: 1,
           topP: 1,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 8192, // Maximum allowed tokens for Gemini 2.5 Pro
         ),
       );
       
@@ -97,7 +97,8 @@ class AIService {
             "- Do not add any commentary, descriptions, or explanations\n"
             "- Format naturally as a transcript\n"
             "- If multiple speakers are clearly distinct, label them as Speaker 1, Speaker 2, etc.\n"
-            "- If speech is unclear, make your best guess rather than marking as [unclear]\n\n"
+            "- If speech is unclear, make your best guess rather than marking as [unclear]\n"
+            "- CRITICAL: Return the COMPLETE transcript of the ENTIRE audio, regardless of length\n\n"
             "AUDIO DATA:\n"
             "Format: WAV, Mono, 16kHz sample rate, optimized for speech recognition\n"
             "Size: ${fileSizeKB.toStringAsFixed(1)} KB\n"
@@ -193,7 +194,7 @@ class AIService {
               {
                 'text': isShortAudio 
                     ? "This is a VERY SHORT audio clip. Transcribe EXACTLY what is spoken with perfect accuracy. DO NOT add any filler words or common phrases like 'the quick brown fox' if they are not present. DO NOT make assumptions about what might be said. Respond ONLY with the exact words heard, nothing more."
-                    : "Please transcribe this audio with perfect accuracy. Include proper punctuation and formatting."
+                    : "Please transcribe this audio with perfect accuracy. Include proper punctuation and formatting. Return the COMPLETE transcript of the ENTIRE audio, regardless of length."
               }
             ]
           }
@@ -202,7 +203,7 @@ class AIService {
           'temperature': 0.0,
           'topK': 1,
           'topP': 1,
-          'maxOutputTokens': 1024
+          'maxOutputTokens': 8192 // Maximum allowed tokens for complete transcription
         }
       };
       
@@ -271,7 +272,7 @@ class AIService {
           temperature: 0.2, // Low temperature for consistent summaries
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 4096, // Increased for longer summaries
         ),
       );
       

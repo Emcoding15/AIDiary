@@ -27,6 +27,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
   bool _isPlayerReady = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
+  double? _fileSize;
   
   bool _isTranscribing = false;
   bool _isGeneratingSummary = false;
@@ -41,6 +42,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
   void initState() {
     super.initState();
     _initAudioPlayer();
+    _loadFileSize();
     _transcription = widget.entry.transcription;
     _summary = widget.entry.summary;
     
@@ -56,6 +58,25 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
     );
     
     _animationController.forward();
+  }
+
+  Future<void> _loadFileSize() async {
+    final audioPath = widget.entry.audioPath;
+    if (audioPath != null) {
+      try {
+        final file = File(audioPath);
+        if (await file.exists()) {
+          final int size = await file.length();
+          if (mounted) {
+            setState(() {
+              _fileSize = size / 1024; // Convert to KB
+            });
+          }
+        }
+      } catch (e) {
+        debugPrint('Error getting file size: $e');
+      }
+    }
   }
 
   Future<void> _initAudioPlayer() async {
@@ -140,6 +161,15 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return '$minutes:$seconds';
   }
+  
+  String _formatFileSize(double kiloBytes) {
+    if (kiloBytes < 1024) {
+      return '${kiloBytes.toStringAsFixed(1)} KB';
+    } else {
+      final megaBytes = kiloBytes / 1024;
+      return '${megaBytes.toStringAsFixed(2)} MB';
+    }
+  }
 
   @override
   void dispose() {
@@ -174,6 +204,25 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                const Spacer(),
+                if (_fileSize != null)
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.storage_rounded,
+                        size: 14,
+                        color: AppTheme.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _formatFileSize(_fileSize!),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
             const SizedBox(height: 16),

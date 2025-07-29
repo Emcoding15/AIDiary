@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/journal_entry.dart';
 import '../services/recording_service.dart';
@@ -21,6 +22,14 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
   final RecordingService _recordingService = RecordingService();
   late Timer _timer;
   final Uuid _uuid = const Uuid();
+  
+  // File size tracking
+  double _currentFileSize = 0.0;
+  
+  // Time limits
+  static const int _warningTimeLimit = 480; // 8 minutes in seconds
+  static const int _maxTimeLimit = 540; // 9 minutes in seconds
+  bool _showWarning = false;
   
   // Animation controllers
   late AnimationController _micAnimationController;
@@ -91,6 +100,38 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
         setState(() {
           if (timer.tick % 10 == 0) {
             _recordingDuration++;
+            
+            // Check time limits
+            if (_recordingDuration >= _maxTimeLimit) {
+              // Auto-stop recording at max time limit
+              _stopRecording();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Recording stopped: 9 minute maximum reached'),
+                  backgroundColor: AppTheme.warningAmber,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                  ),
+                ),
+              );
+            } else if (_recordingDuration >= _warningTimeLimit && !_showWarning) {
+              // Show warning at warning time limit
+              setState(() {
+                _showWarning = true;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Recording approaching 9 minute limit. For best results, keep recordings under 8 minutes.'),
+                  backgroundColor: AppTheme.warningAmber,
+                  duration: const Duration(seconds: 5),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                  ),
+                ),
+              );
+            }
           }
         });
         _updateAmplitude();
@@ -118,6 +159,17 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
       });
     }
   }
+  
+  Future<void> _updateFileSize() async {
+    if (_recordingService.currentFilePath != null) {
+      final fileSize = await _recordingService.getCurrentFileSize();
+      if (fileSize != null && mounted) {
+        setState(() {
+          _currentFileSize = fileSize;
+        });
+      }
+    }
+  }
 
   Future<void> _toggleRecording() async {
     if (_isRecording) {
@@ -137,6 +189,8 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
         _isPaused = false;
         _recordingDuration = 0;
         _currentAmplitude = 0.1;
+        _currentFileSize = 0.0;
+        _showWarning = false;
         _amplitudeHistory.fillRange(0, _amplitudeHistory.length, 0.1);
       });
       _startTimer();
@@ -158,6 +212,10 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
   Future<void> _stopRecording() async {
     final path = await _recordingService.stopRecording();
     _stopTimer();
+    
+    // Get final file size
+    await _updateFileSize();
+    
     setState(() {
       _isRecording = false;
       _isPaused = false;
@@ -246,9 +304,30 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
     final remainingSeconds = seconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
+  
+  String _formatFileSize(double kiloBytes) {
+    if (kiloBytes < 1024) {
+      return '${kiloBytes.toStringAsFixed(1)} KB';
+    } else {
+      final megaBytes = kiloBytes / 1024;
+      return '${megaBytes.toStringAsFixed(2)} MB';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Timer color based on recording duration
+    Color timerColor = AppTheme.textPrimary;
+    if (_isRecording) {
+      if (_isPaused) {
+        timerColor = AppTheme.warningAmber;
+      } else if (_recordingDuration >= _warningTimeLimit) {
+        timerColor = AppTheme.warningAmber;
+      } else {
+        timerColor = AppTheme.recordingRed;
+      }
+    }
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Record Journal Entry'),
@@ -276,7 +355,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
               
               const SizedBox(height: 40),
               
-              // Recording timer
+              // Recording timer and file size
               Center(
                 child: Column(
                   children: [
@@ -284,9 +363,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
                       _formatDuration(_recordingDuration),
                       style: Theme.of(context).textTheme.displayMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: _isRecording 
-                            ? (_isPaused ? AppTheme.warningAmber : AppTheme.recordingRed)
-                            : AppTheme.textPrimary,
+                        color: timerColor,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -300,6 +377,39 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
                             : AppTheme.textSecondary,
                       ),
                     ),
+                    // Only show file size after recording is complete (not during recording)
+                    if (!_isRecording && _currentFileSize > 0) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.storage_rounded,
+                            size: 16,
+                            color: AppTheme.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _formatFileSize(_currentFileSize),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    // Show time warning when appropriate
+                    if (_isRecording && _recordingDuration >= _warningTimeLimit) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Approaching ${_maxTimeLimit ~/ 60} minute limit',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.warningAmber,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -432,6 +542,8 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
                         _buildTipItem('Speak clearly and at a normal pace'),
                         _buildTipItem('Keep the phone about 6-12 inches from your mouth'),
                         _buildTipItem('Add a title that helps you remember this entry'),
+                        _buildTipItem('Keep recordings under 8 minutes for best results'),
+                        _buildTipItem('Recordings will automatically stop at 9 minutes'),
                       ],
                     ),
                   ),

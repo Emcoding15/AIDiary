@@ -7,11 +7,13 @@ import '../screens/record_screen.dart';
 class HomeScreen extends StatelessWidget {
   final List<JournalEntry> entries;
   final Function(JournalEntry entry)? onEntryTap;
+  final Function(JournalEntry entry)? onEntryAdded;
 
   const HomeScreen({
     Key? key, 
     this.entries = const [], 
     this.onEntryTap,
+    this.onEntryAdded,
   }) : super(key: key);
 
   @override
@@ -174,8 +176,8 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                final result = await Navigator.push(
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation, secondaryAnimation) => const RecordScreen(),
@@ -195,6 +197,26 @@ class HomeScreen extends StatelessWidget {
                     transitionDuration: AppTheme.mediumAnimationDuration,
                   ),
                 );
+                
+                // Handle the returned journal entry
+                if (result != null && result is JournalEntry && onEntryAdded != null) {
+                  onEntryAdded!(result);
+                  
+                  // Show a confirmation message
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Journal entry saved successfully!'),
+                        backgroundColor: AppTheme.successGreen,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                        ),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                }
               },
               icon: const Icon(Icons.mic_rounded),
               label: const Text('Start Recording'),

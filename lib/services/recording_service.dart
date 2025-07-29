@@ -90,6 +90,18 @@ class RecordingService {
     return null;
   }
 
+  // Get the current file size in KB
+  Future<double?> getCurrentFileSize() async {
+    if (_currentFilePath != null) {
+      final File file = File(_currentFilePath!);
+      if (await file.exists()) {
+        final int fileSize = await file.length();
+        return fileSize / 1024; // Convert to KB
+      }
+    }
+    return null;
+  }
+
   // Generate a unique file path for the recording
   Future<String> _generateFilePath() async {
     final Directory appDocDir = await getApplicationDocumentsDirectory();
