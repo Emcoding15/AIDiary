@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "164765566610",
+    "project_id": "dai-journal",
+    "storage_bucket": "dai-journal.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:164765566610:android:df2ba24a00cf29d24e484b",
+        "android_client_info": {
+          "package_name": "com.example.audio_journal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_2GACLCuDJ7zAKFoGOQ93LhflV73aVZ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
