@@ -48,6 +48,8 @@ lib/config/api_config.dart
 .env
 *.env
 secrets.json
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
 
 # Release builds
 /releases/
