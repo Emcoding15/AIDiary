@@ -23,7 +23,7 @@ class AIService {
       return null;
     }
     final audioBytes = await file.readAsBytes();
-    String promptText = 'You are an advanced speech recognition and summarization system. First, transcribe the following audio as accurately as possible. Then, provide a concise summary of the transcription. Respond ONLY in this JSON format: {"transcription": "...", "summary": "..."}. Do not include any other text or explanation.';
+  String promptText = 'You are an advanced speech recognition and summarization system. First, transcribe the following audio as accurately as possible. Then, provide a concise summary of the transcription. Then, generate a short, clear, and relevant title for the entry based on the main topic or summary. Respond ONLY in this JSON format: {"title": "...", "transcription": "...", "summary": "..."}. Do not include any other text or explanation.';
     final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=$apiKey');
     final Map<String, dynamic> requestBody = {
       'contents': [
@@ -67,10 +67,11 @@ class AIService {
           jsonResponse['candidates'][0]['content']['parts'].length > 0) {
         final text = jsonResponse['candidates'][0]['content']['parts'][0]['text'];
         String cleaned = text.split('\n').where((line) => !line.trim().startsWith('```')).join('\n').trim();
-        final Map<String, dynamic> result = jsonDecode(cleaned);
-        final transcription = (result['transcription'] as String?)?.trim() ?? '';
-        final summary = (result['summary'] as String?)?.trim() ?? '';
-        return {'transcription': transcription, 'summary': summary};
+  final Map<String, dynamic> result = jsonDecode(cleaned);
+  final title = (result['title'] as String?)?.trim() ?? '';
+  final transcription = (result['transcription'] as String?)?.trim() ?? '';
+  final summary = (result['summary'] as String?)?.trim() ?? '';
+  return {'title': title, 'transcription': transcription, 'summary': summary};
       } else {
         print('Unexpected Gemini response: ${response.body}');
         return null;

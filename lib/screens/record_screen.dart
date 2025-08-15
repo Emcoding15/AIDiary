@@ -297,14 +297,8 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
     final transcription = result['transcription']!;
     final summary = result['summary']?.isNotEmpty == true ? result['summary'] : null;
 
-    // Generate title from transcription (first sentence or up to 8 words)
-    String generatedTitle = transcription.split(RegExp(r'[.!?\n]')).first.trim();
-    if (generatedTitle.split(' ').length > 8) {
-      generatedTitle = generatedTitle.split(' ').take(8).join(' ') + '...';
-    }
-    if (generatedTitle.isEmpty) {
-      generatedTitle = 'Audio Entry';
-    }
+    // Use the AI-generated title, fallback to 'Audio Entry' if empty
+    String generatedTitle = result['title']?.isNotEmpty == true ? result['title']! : 'Audio Entry';
 
     // Create a new journal entry
     final journalEntry = JournalEntry(
