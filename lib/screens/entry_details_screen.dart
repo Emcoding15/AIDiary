@@ -390,12 +390,68 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
     );
   }
 
-  Future<void> _transcribeAudio() async {
-    final audioPath = widget.entry.audioPath;
-    if (audioPath == null) {
+  Future<void> _transcribeAndSummarize() async {
+  final audioPath = widget.entry.audioPath;
+  if (audioPath == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('No audio file available to transcribe and summarize'),
+        backgroundColor: AppTheme.errorColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+        ),
+      ),
+    );
+    return;
+  }
+
+  setState(() {
+    _isTranscribing = true;
+    _isGeneratingSummary = true;
+  });
+
+  try {
+    final result = await _aiService.transcribeAndSummarize(audioPath);
+    if (result == null) {
+      throw Exception('AI did not return a result');
+    }
+    if (mounted) {
+      setState(() {
+        _isTranscribing = false;
+        _isGeneratingSummary = false;
+        _transcription = result['transcription'];
+        _summary = result['summary'];
+      });
+      final updatedEntry = JournalEntry(
+        id: widget.entry.id,
+        title: widget.entry.title,
+        date: widget.entry.date,
+        audioPath: widget.entry.audioPath,
+        transcription: result['transcription'],
+        summary: result['summary'],
+      );
+      widget.onEntryUpdated?.call(updatedEntry);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('No audio file available to transcribe'),
+          content: const Text('Transcription and summary completed successfully'),
+          backgroundColor: AppTheme.successGreen,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+          ),
+        ),
+      );
+    }
+  } catch (e) {
+    if (mounted) {
+      setState(() {
+        _isTranscribing = false;
+        _isGeneratingSummary = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
           backgroundColor: AppTheme.errorColor,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -403,135 +459,9 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
           ),
         ),
       );
-      return;
-    }
-
-    setState(() {
-      _isTranscribing = true;
-    });
-
-    try {
-      final transcription = await _aiService.transcribeAudio(audioPath);
-      
-      if (mounted) {
-        setState(() {
-          _isTranscribing = false;
-          _transcription = transcription;
-        });
-        
-        // Update the entry with the new transcription
-        final updatedEntry = JournalEntry(
-          id: widget.entry.id,
-          title: widget.entry.title,
-          date: widget.entry.date,
-          audioPath: widget.entry.audioPath,
-          transcription: transcription,
-          summary: widget.entry.summary,
-        );
-        
-        widget.onEntryUpdated?.call(updatedEntry);
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Transcription completed successfully'),
-            backgroundColor: AppTheme.successGreen,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isTranscribing = false;
-        });
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error transcribing audio: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-            ),
-          ),
-        );
-      }
     }
   }
-
-  Future<void> _generateSummary() async {
-    if (_transcription == null || _transcription!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Transcription is required to generate a summary'),
-          backgroundColor: AppTheme.warningAmber,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-          ),
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _isGeneratingSummary = true;
-    });
-
-    try {
-      final summary = await _aiService.generateSummary(_transcription!);
-      
-      if (mounted) {
-        setState(() {
-          _isGeneratingSummary = false;
-          _summary = summary;
-        });
-        
-        // Update the entry with the new summary
-        final updatedEntry = JournalEntry(
-          id: widget.entry.id,
-          title: widget.entry.title,
-          date: widget.entry.date,
-          audioPath: widget.entry.audioPath,
-          transcription: _transcription,
-          summary: summary,
-        );
-        
-        widget.onEntryUpdated?.call(updatedEntry);
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Summary generated successfully'),
-            backgroundColor: AppTheme.successGreen,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isGeneratingSummary = false;
-        });
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error generating summary: ${e.toString()}'),
-            backgroundColor: AppTheme.errorColor,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-            ),
-          ),
-        );
-      }
-    }
-  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -677,7 +607,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                 const Spacer(),
                 if (_transcription == null || _transcription!.isEmpty)
                   ElevatedButton.icon(
-                    onPressed: _isTranscribing ? null : _transcribeAudio,
+                    onPressed: _isTranscribing ? null : _transcribeAndSummarize,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
@@ -796,7 +726,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                 const Spacer(),
                 if (hasTranscription && (_summary == null || _summary!.isEmpty))
                   ElevatedButton.icon(
-                    onPressed: _isGeneratingSummary ? null : _generateSummary,
+                    onPressed: _isGeneratingSummary ? null : _transcribeAndSummarize,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,

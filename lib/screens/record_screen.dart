@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/journal_entry.dart';
 import '../services/recording_service.dart';
+import '../services/ai_service.dart';
 import 'package:uuid/uuid.dart';
 import '../config/theme.dart';
 
@@ -20,6 +21,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
   int _recordingDuration = 0;
   final TextEditingController _titleController = TextEditingController();
   final RecordingService _recordingService = RecordingService();
+  final AIService _aiService = AIService();
   late Timer _timer;
   final Uuid _uuid = const Uuid();
   
@@ -256,21 +258,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
     if (_isRecording) {
       await _stopRecording();
     }
-    
-    if (_titleController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please enter a title for your journal entry'),
-          backgroundColor: AppTheme.warningAmber,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-          ),
-        ),
-      );
-      return;
-    }
-    
+
     // Get the file path of the recording
     final audioPath = _recordingService.currentFilePath;
     if (audioPath == null) {
@@ -286,16 +274,49 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
       );
       return;
     }
-    
+
+    // Show loading dialog while processing
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    // Transcribe and summarize in a single request
+    final result = await _aiService.transcribeAndSummarize(audioPath);
+    if (result == null || (result['transcription']?.isEmpty ?? true)) {
+      Navigator.of(context).pop(); // Remove loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Failed to transcribe audio.'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+      return;
+    }
+    final transcription = result['transcription']!;
+    final summary = result['summary']?.isNotEmpty == true ? result['summary'] : null;
+
+    // Generate title from transcription (first sentence or up to 8 words)
+    String generatedTitle = transcription.split(RegExp(r'[.!?\n]')).first.trim();
+    if (generatedTitle.split(' ').length > 8) {
+      generatedTitle = generatedTitle.split(' ').take(8).join(' ') + '...';
+    }
+    if (generatedTitle.isEmpty) {
+      generatedTitle = 'Audio Entry';
+    }
+
     // Create a new journal entry
     final journalEntry = JournalEntry(
       id: _uuid.v4(),
-      title: _titleController.text,
+      title: generatedTitle,
       date: DateTime.now(),
       audioPath: audioPath,
+      transcription: transcription,
+      summary: summary,
     );
-    
-    // Return the entry to the calling screen
+
+    Navigator.of(context).pop(); // Remove loading dialog
     Navigator.pop(context, journalEntry);
   }
 
@@ -706,4 +727,4 @@ class WaveformPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return true;
   }
-} 
+}
