@@ -19,7 +19,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
   bool _isRecording = false;
   bool _isPaused = false;
   int _recordingDuration = 0;
-  final TextEditingController _titleController = TextEditingController();
+  // Removed title controller (title is now AI-generated)
   final RecordingService _recordingService = RecordingService();
   final AIService _aiService = AIService();
   late Timer _timer;
@@ -84,7 +84,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
 
   @override
   void dispose() {
-    _titleController.dispose();
+  // _titleController removed
     if (_isRecording) {
       _stopTimer();
       _recordingService.cancelRecording();
@@ -211,20 +211,17 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
     }
   }
 
-  Future<void> _stopRecording() async {
+  Future<void> _stopRecording({bool showSnackBar = true}) async {
     final path = await _recordingService.stopRecording();
     _stopTimer();
-    
     // Get final file size
     await _updateFileSize();
-    
     setState(() {
       _isRecording = false;
       _isPaused = false;
     });
     _micAnimationController.reverse();
-    
-    if (path != null) {
+    if (showSnackBar && path != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Recording saved successfully'),
@@ -354,21 +351,6 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Title input field
-              TextField(
-                controller: _titleController,
-                decoration: InputDecoration(
-                  labelText: 'Entry Title',
-                  hintText: 'Give your journal entry a title',
-                  prefixIcon: const Icon(Icons.title_rounded),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                  ),
-                ),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              
-              const SizedBox(height: 40),
               
               // Recording timer and file size
               Center(
@@ -475,8 +457,10 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
               
               // Additional controls
               if (_isRecording) ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 16,
+                  runSpacing: 12,
                   children: [
                     // Pause/Resume button
                     ElevatedButton.icon(
@@ -486,37 +470,89 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
                             ? Theme.of(context).colorScheme.primary
                             : AppTheme.warningAmber,
                         foregroundColor: Colors.white,
+                        minimumSize: const Size(120, 48),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       ),
                       icon: Icon(_isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded),
                       label: Text(_isPaused ? 'Resume' : 'Pause'),
                     ),
-                    const SizedBox(width: 16),
                     // Save button
                     ElevatedButton.icon(
                       onPressed: _saveRecording,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.successGreen,
                         foregroundColor: Colors.white,
+                        minimumSize: const Size(100, 48),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       ),
                       icon: const Icon(Icons.save_rounded),
                       label: const Text('Save'),
                     ),
+                    // Discard button
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        if (_isRecording) await _stopRecording(showSnackBar: false);
+                        // Remove the current file if exists
+                        if (_recordingService.currentFilePath != null) {
+                          try {
+                            final file = File(_recordingService.currentFilePath!);
+                            if (await file.exists()) {
+                              await file.delete();
+                            }
+                          } catch (_) {}
+                        }
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.errorColor,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(110, 48),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                      icon: const Icon(Icons.delete_rounded),
+                      label: const Text('Discard'),
+                    ),
                   ],
                 ),
               ] else ...[
-                // Save button (disabled until recording is made)
-                Center(
-                  child: ElevatedButton.icon(
-                    onPressed: _recordingService.currentFilePath != null ? _saveRecording : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.successGreen,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: Colors.grey.shade300,
-                    ),
-                    icon: const Icon(Icons.save_rounded),
-                    label: const Text('Save Entry'),
+                // Save/Discard buttons after recording
+                if (_recordingService.currentFilePath != null) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _saveRecording,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.successGreen,
+                          foregroundColor: Colors.white,
+                        ),
+                        icon: const Icon(Icons.save_rounded),
+                        label: const Text('Save Entry'),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          // Remove the current file if exists
+                          if (_recordingService.currentFilePath != null) {
+                            try {
+                              final file = File(_recordingService.currentFilePath!);
+                              if (await file.exists()) {
+                                await file.delete();
+                              }
+                            } catch (_) {}
+                          }
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.errorColor,
+                          foregroundColor: Colors.white,
+                        ),
+                        icon: const Icon(Icons.delete_rounded),
+                        label: const Text('Discard'),
+                      ),
+                    ],
                   ),
-                ),
+                ],
               ],
               
               const SizedBox(height: 16),
@@ -556,9 +592,9 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
                         _buildTipItem('Find a quiet place to record'),
                         _buildTipItem('Speak clearly and at a normal pace'),
                         _buildTipItem('Keep the phone about 6-12 inches from your mouth'),
-                        _buildTipItem('Add a title that helps you remember this entry'),
                         _buildTipItem('Keep recordings under 8 minutes for best results'),
                         _buildTipItem('Recordings will automatically stop at 9 minutes'),
+                        _buildTipItem('Titles and summaries are now generated automatically!'),
                       ],
                     ),
                   ),
