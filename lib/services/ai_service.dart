@@ -6,15 +6,15 @@ import '../config/api_config.dart';
 import 'audio_processing_service.dart';
 
 class AIService {
-  final String _apiKey = ApiConfig.googleAiApiKey;
   final AudioProcessingService _audioProcessingService = AudioProcessingService();
-  
+
   /// Transcribes audio from a file path
   Future<String?> transcribeAudio(String audioFilePath) async {
     try {
-      // Check if the API key is set
-      if (_apiKey == 'YOUR_GOOGLE_AI_API_KEY') {
-        return 'Please set your Google AI API key in config/api_config.dart';
+      // Load the API key from persistent settings
+      final apiKey = await ApiConfig.getGoogleAiApiKey();
+      if (apiKey == null || apiKey.trim().isEmpty) {
+        return 'Please set your Google AI API key in the app settings.';
       }
 
       // Process and optimize the audio file for transcription
@@ -23,19 +23,23 @@ class AIService {
       if (processedAudioPath == null) {
         return 'Failed to process audio file';
       }
-      
+
       print('Using optimized audio file for transcription');
-      
+
       // Get file info for context
       final File file = File(processedAudioPath);
       final fileSize = await file.length();
       final fileSizeKB = fileSize / 1024;
       print('Audio file size for transcription: ${fileSizeKB.toStringAsFixed(1)} KB');
-      
+
       // For very short audio clips, try the direct API approach first
       try {
         print('Attempting direct API transcription...');
-        final directResult = await _transcribeAudioDirectApi(processedAudioPath, isShortAudio: fileSizeKB < 500);
+        final directResult = await _transcribeAudioDirectApi(
+          processedAudioPath,
+          isShortAudio: fileSizeKB < 500,
+          apiKey: apiKey,
+        );
         if (directResult != null && directResult.isNotEmpty) {
           print('Direct API transcription successful');
           print('DIRECT API RESULT: "$directResult"');
@@ -46,18 +50,18 @@ class AIService {
       } catch (e) {
         print('Direct API error: $e - Falling back to base64 method');
       }
-      
+
       // Convert to base64, limiting to 10MB if larger
       final int maxSizeBytes = 10 * 1024 * 1024; // 10MB limit
       final String audioBase64 = await _audioProcessingService.audioToBase64(
-        processedAudioPath, 
-        maxSizeBytes: fileSize > maxSizeBytes ? maxSizeBytes : null
+        processedAudioPath,
+        maxSizeBytes: fileSize > maxSizeBytes ? maxSizeBytes : null,
       );
-      
+
       // Create a model instance with Gemini 2.5 Pro
       final model = GenerativeModel(
         model: 'gemini-2.5-pro', // Using the latest model
-        apiKey: _apiKey,
+        apiKey: apiKey,
         generationConfig: GenerationConfig(
           temperature: 0.0, // Zero temperature for most deterministic output
           topK: 1,
@@ -65,7 +69,7 @@ class AIService {
           maxOutputTokens: 8192, // Maximum allowed tokens for Gemini 2.5 Pro
         ),
       );
-      
+
       // Create a specialized prompt based on audio length
       String promptText;
       if (fileSizeKB < 500) {
@@ -77,15 +81,7 @@ class AIService {
             "- DO NOT add any filler words or common phrases like 'the quick brown fox' if they are not present\n"
             "- DO NOT make assumptions about what might be said\n"
             "- If you can't make out the words clearly, respond with exactly what you hear, even if it's partial\n"
-            "- DO NOT complete phrases or add words that aren't clearly audible\n"
-            "- Include proper punctuation if appropriate\n"
-            "- Respond ONLY with the exact words heard, nothing more\n\n"
-            "AUDIO DATA:\n"
-            "Format: WAV, Mono, 16kHz sample rate, optimized for speech recognition\n"
-            "Size: ${fileSizeKB.toStringAsFixed(1)} KB (very short clip)\n"
-            "Base64 encoded audio: $audioBase64\n\n"
-            "RESPONSE FORMAT:\n"
-            "Respond ONLY with the exact words heard. No explanations, no assumptions.";
+            "- DO NOT complete phrases or add words that aren't clearly audible\n";
       } else {
         // For longer recordings
         promptText = "SYSTEM: You are an advanced speech recognition system with exceptional accuracy. Your sole task is to transcribe the following audio perfectly.\n\n"
@@ -106,15 +102,15 @@ class AIService {
             "RESPONSE FORMAT:\n"
             "Respond ONLY with the transcript text. Do not include any explanations, comments, or descriptions about the audio or transcription process.";
       }
-      
+
       final content = [Content.text(promptText)];
-      
+
       // Generate content with enhanced retry logic
       print('Sending transcription request to Gemini API...');
       GenerateContentResponse? response;
       int retries = 0;
       const maxRetries = 3;
-      
+
       while (retries <= maxRetries) {
         try {
           response = await model.generateContent(content);
@@ -135,23 +131,23 @@ class AIService {
           await Future.delayed(Duration(seconds: 2 * retries)); // Exponential backoff
         }
       }
-      
+
       // Clean up temporary files
       await _audioProcessingService.cleanupTempFiles();
-      
+
       // If no transcription is detected
       if (response == null || response.text == null || response.text!.isEmpty) {
         return 'No speech detected in the audio file';
       }
-      
+
       // Post-process the transcription for cleanliness
       String transcription = response.text!
-          .replaceAll(RegExp(r'^\s*Transcript:\s*', caseSensitive: false), '') // Remove any "Transcript:" prefix
-          .replaceAll(RegExp(r'^\s*Transcription:\s*', caseSensitive: false), '')
-          .replaceAll(RegExp(r'\[background noise\]\s*'), '')
-          .replaceAll(RegExp(r'\n{3,}'), '\n\n') // Normalize paragraph spacing
+          .replaceAll(RegExp(r'^\\s*Transcript:\\s*', caseSensitive: false), '') // Remove any "Transcript:" prefix
+          .replaceAll(RegExp(r'^\\s*Transcription:\\s*', caseSensitive: false), '')
+          .replaceAll(RegExp(r'\\[background noise\\]\\s*'), '')
+          .replaceAll(RegExp(r'\\n{3,}'), '\\n\\n') // Normalize paragraph spacing
           .trim();
-      
+
       print('Transcription completed and processed');
       print('TRANSCRIPTION RESULT: "$transcription"');
       return transcription;
@@ -162,23 +158,22 @@ class AIService {
       return 'Error transcribing audio: $e';
     }
   }
-  
+
   /// Attempts to transcribe audio using a more direct API approach
-  /// This is more similar to how the Gemini app might handle audio transcription
-  Future<String?> _transcribeAudioDirectApi(String audioFilePath, {bool isShortAudio = false}) async {
+  Future<String?> _transcribeAudioDirectApi(String audioFilePath, {bool isShortAudio = false, required String apiKey}) async {
     try {
       final file = File(audioFilePath);
       if (!await file.exists()) {
         return null;
       }
-      
+
       // Create multipart request
-      final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=$_apiKey');
-      
+      final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=$apiKey');
+
       // Read audio file as bytes
       final audioBytes = await file.readAsBytes();
       final fileSize = audioBytes.length / 1024; // Size in KB
-      
+
       // Prepare request body
       final Map<String, dynamic> requestBody = {
         'contents': [
@@ -192,7 +187,7 @@ class AIService {
                 }
               },
               {
-                'text': isShortAudio 
+                'text': isShortAudio
                     ? "This is a VERY SHORT audio clip. Transcribe EXACTLY what is spoken with perfect accuracy. DO NOT add any filler words or common phrases like 'the quick brown fox' if they are not present. DO NOT make assumptions about what might be said. Respond ONLY with the exact words heard, nothing more."
                     : "Please transcribe this audio with perfect accuracy. Include proper punctuation and formatting. Return the COMPLETE transcript of the ENTIRE audio, regardless of length."
               }
@@ -206,47 +201,47 @@ class AIService {
           'maxOutputTokens': 8192 // Maximum allowed tokens for complete transcription
         }
       };
-      
+
       // Convert request body to JSON
       final String jsonBody = jsonEncode(requestBody);
-      
+
       // Set headers
       final Map<String, String> headers = {
         'Content-Type': 'application/json',
       };
-      
+
       // Send request
       print('Sending direct API request with JSON payload...');
       print('Audio file size: ${fileSize.toStringAsFixed(1)} KB');
-      
+
       final response = await http.post(
         uri,
         headers: headers,
         body: jsonBody,
       );
-      
+
       // Process response
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);
-        if (jsonResponse['candidates'] != null && 
-            jsonResponse['candidates'].length > 0 && 
+        if (jsonResponse['candidates'] != null &&
+            jsonResponse['candidates'].length > 0 &&
             jsonResponse['candidates'][0]['content'] != null &&
             jsonResponse['candidates'][0]['content']['parts'] != null &&
             jsonResponse['candidates'][0]['content']['parts'].length > 0) {
-          
+
           final text = jsonResponse['candidates'][0]['content']['parts'][0]['text'];
           if (text != null && text.isNotEmpty) {
             return text.trim();
           }
         }
-        
+
         // If we get here, the response format wasn't as expected
         print('Unexpected response format: ${response.body}');
       } else {
         print('Direct API request failed with status: ${response.statusCode}');
         print('Response body: ${response.body}');
       }
-      
+
       return null;
     } catch (e) {
       print('Error in direct API transcription: $e');
@@ -257,17 +252,18 @@ class AIService {
   /// Generates a summary from a transcription
   Future<String?> generateSummary(String transcription) async {
     try {
-      // Check if the API key is set
-      if (_apiKey == 'YOUR_GOOGLE_AI_API_KEY') {
-        return 'Please set your Google AI API key in config/api_config.dart';
+      // Load the API key from persistent settings
+      final apiKey = await ApiConfig.getGoogleAiApiKey();
+      if (apiKey == null || apiKey.trim().isEmpty) {
+        return 'Please set your Google AI API key in the app settings.';
       }
 
       print('Generating summary from transcription...');
-      
+
       // Create a model instance with Gemini 2.5 Pro
       final model = GenerativeModel(
         model: 'gemini-2.5-pro', // Using the latest model
-        apiKey: _apiKey,
+        apiKey: apiKey,
         generationConfig: GenerationConfig(
           temperature: 0.2, // Low temperature for consistent summaries
           topK: 40,
@@ -275,11 +271,11 @@ class AIService {
           maxOutputTokens: 4096, // Increased for longer summaries
         ),
       );
-      
-      // Generate a summary from the transcription with improved prompt
+
+      // Only send Content.text (role: 'user') to the SDK. Do NOT use any system/model role.
       final content = [
         Content.text(
-          "SYSTEM: You are an expert summarization assistant that creates concise, accurate summaries while preserving key information.\n\n"
+          "You are an expert summarization assistant that creates concise, accurate summaries while preserving key information.\n\n"
           "TASK: Create a clear, well-structured summary of the following transcription. Focus on the main points, key ideas, and important details.\n\n"
           "INSTRUCTIONS:\n"
           "- Identify and include all key points and important information\n"
@@ -290,20 +286,20 @@ class AIService {
           "TRANSCRIPTION TEXT:\n$transcription\n\n"
           "RESPONSE FORMAT:\n"
           "Provide only the summary without any introductory phrases like 'Here's a summary' or explanations of your process."
-        ),
+        )
       ];
-      
+
       final response = await model.generateContent(content);
-      
+
       if (response.text == null || response.text!.isEmpty) {
         return 'Unable to generate summary';
       }
-      
+
       // Clean up any potential prefixes
       String summary = response.text!
-          .replaceAll(RegExp(r'^\s*Summary:\s*', caseSensitive: false), '')
+          .replaceAll(RegExp(r'^\\s*Summary:\\s*', caseSensitive: false), '')
           .trim();
-      
+
       print('Summary generated successfully');
       return summary;
     } catch (e) {
@@ -311,4 +307,4 @@ class AIService {
       return 'Error generating summary: $e';
     }
   }
-} 
+}

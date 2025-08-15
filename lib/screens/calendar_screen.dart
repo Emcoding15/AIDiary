@@ -59,11 +59,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     selectedDayEntries.sort((a, b) => b.date.compareTo(a.date));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Journal Calendar'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
-      ),
+  // AppBar removed to avoid double app bar
       body: Column(
         children: [
           TableCalendar(

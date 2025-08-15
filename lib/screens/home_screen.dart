@@ -38,19 +38,7 @@ class HomeScreen extends StatelessWidget {
       ..sort((a, b) => b.compareTo(a));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Audio Journal'),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-            },
-            tooltip: 'Logout',
-          ),
-        ],
-      ),
+  // AppBar removed to avoid double app bar
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -155,24 +143,10 @@ class HomeScreen extends StatelessWidget {
   }
   
   Widget _buildEmptyState(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Audio Journal'),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-            },
-            tooltip: 'Logout',
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
             Icon(
               Icons.mic_none_rounded,
               size: 80,
@@ -204,10 +178,8 @@ class HomeScreen extends StatelessWidget {
                       const begin = Offset(0.0, 1.0);
                       const end = Offset.zero;
                       const curve = Curves.easeInOutCubic;
-                      
                       var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
                       var offsetAnimation = animation.drive(tween);
-                      
                       return SlideTransition(
                         position: offsetAnimation,
                         child: child,
@@ -216,12 +188,9 @@ class HomeScreen extends StatelessWidget {
                     transitionDuration: AppTheme.mediumAnimationDuration,
                   ),
                 );
-                
                 // Handle the returned journal entry
                 if (result != null && result is JournalEntry && onEntryAdded != null) {
                   onEntryAdded!(result);
-                  
-                  // Show a confirmation message
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -242,8 +211,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
   
   Widget _buildStatsCard(BuildContext context) {

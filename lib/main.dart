@@ -11,6 +11,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'screens/auth_screen.dart';
+import 'screens/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -221,6 +222,20 @@ class _AudioJournalAppState extends State<AudioJournalApp> with SingleTickerProv
     ];
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Audio Journal'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: screens[_selectedIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
