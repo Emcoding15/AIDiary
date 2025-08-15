@@ -12,7 +12,20 @@
           "package_name": "com.example.audio_journal"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "164765566610-tsciaad4lu43s3grm6k4f7ffviusbce0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.audio_journal",
+            "certificate_hash": "af6fd7c53e17b4326547ba92be1efd3fa47a9f3d"
+          }
+        },
+        {
+          "client_id": "164765566610-5kh7cib8rfuhc37fvpujf2qfnc21c2d9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD_2GACLCuDJ7zAKFoGOQ93LhflV73aVZ0"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "164765566610-5kh7cib8rfuhc37fvpujf2qfnc21c2d9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

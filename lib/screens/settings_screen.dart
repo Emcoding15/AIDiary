@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/settings_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 /// Settings screen for entering and saving the API key
 class SettingsScreen extends StatefulWidget {
@@ -120,6 +121,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           if (confirm == true) {
                             Navigator.of(context).pop();
                             await Future.delayed(Duration(milliseconds: 100));
+                            try {
+                              // Also sign out from Google if used
+                              final googleSignIn = GoogleSignIn();
+                              await googleSignIn.signOut();
+                            } catch (_) {}
                             await FirebaseAuth.instance.signOut();
                           }
                         },
