@@ -7,6 +7,7 @@ import '../services/recording_service.dart';
 import '../services/ai_service.dart';
 import 'package:uuid/uuid.dart';
 import '../config/theme.dart';
+import '../services/firebase_service.dart';
 
 class RecordScreen extends StatefulWidget {
   const RecordScreen({Key? key}) : super(key: key);
@@ -305,7 +306,21 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
       audioPath: audioPath,
       transcription: transcription,
       summary: summary,
+      duration: _recordingDuration,
     );
+
+    try {
+      await FirebaseService().saveJournalEntry(journalEntry);
+      print('DEBUG: Entry saved to Firestore!');
+    } catch (e) {
+      print('DEBUG: Failed to save entry to Firestore: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save entry to Firestore: $e'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    }
 
     Navigator.of(context).pop(); // Remove loading dialog
     Navigator.pop(context, journalEntry);

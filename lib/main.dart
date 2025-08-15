@@ -207,7 +207,6 @@ class _AudioJournalAppState extends State<AudioJournalApp> with SingleTickerProv
       FadeTransition(
         opacity: _animationController,
         child: HomeScreen(
-          entries: _entries, 
           onEntryTap: (entry) => _navigateToEntryDetailsScreen(context, entry),
           onEntryAdded: _addJournalEntry,
         ),

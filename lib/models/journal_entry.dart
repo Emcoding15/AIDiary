@@ -5,6 +5,7 @@ class JournalEntry {
   final String? audioPath;
   final String? transcription;
   final String? summary;
+  final int duration; // duration in seconds
 
   JournalEntry({
     required this.id,
@@ -13,5 +14,6 @@ class JournalEntry {
     this.audioPath,
     this.transcription,
     this.summary,
+    required this.duration,
   });
-} 
+}

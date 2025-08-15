@@ -1,31 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../models/journal_entry.dart';
+import '../services/firebase_service.dart';
 import '../config/theme.dart';
-import '../screens/record_screen.dart';
-
-class HomeScreen extends StatelessWidget {
-  final List<JournalEntry> entries;
+import 'record_screen.dart';
+class HomeScreen extends StatefulWidget {
   final Function(JournalEntry entry)? onEntryTap;
   final Function(JournalEntry entry)? onEntryAdded;
 
   const HomeScreen({
-    Key? key, 
-    this.entries = const [], 
+    Key? key,
     this.onEntryTap,
     this.onEntryAdded,
   }) : super(key: key);
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  List<JournalEntry> _entries = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEntries();
+  }
+
+  Future<void> _loadEntries() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final entries = await FirebaseService().loadJournalEntries();
+      setState(() {
+        _entries = entries;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to load entries.';
+        _loading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (entries.isEmpty) {
+    if (_loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_error != null) {
+      return Scaffold(
+        body: Center(child: Text('Failed to load entries.')),
+      );
+    }
+    if (_entries.isEmpty) {
       return _buildEmptyState(context);
     }
 
     // Group entries by date
     final Map<String, List<JournalEntry>> entriesByDate = {};
-    for (var entry in entries) {
+    for (var entry in _entries) {
       final dateString = DateFormat('yyyy-MM-dd').format(entry.date);
       if (!entriesByDate.containsKey(dateString)) {
         entriesByDate[dateString] = [];
@@ -38,7 +79,6 @@ class HomeScreen extends StatelessWidget {
       ..sort((a, b) => b.compareTo(a));
 
     return Scaffold(
-  // AppBar removed to avoid double app bar
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -61,78 +101,38 @@ class HomeScreen extends StatelessWidget {
                     style: Theme.of(context).textTheme.displaySmall,
                   ),
                   const SizedBox(height: 16),
-                  // Stats card
-                  if (entries.isNotEmpty) _buildStatsCard(context),
+                  if (_entries.isNotEmpty) _buildStatsCard(context),
                 ],
               ),
             ),
           ),
-          
-          // Recent entries header
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-              child: Text(
-                'Recent Entries',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-            ),
-          ),
-          
-          // Entries list
+          // List of journal entries grouped by date
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
-                final dateString = sortedDates[index];
-                final date = DateTime.parse(dateString);
-                final entriesForDate = entriesByDate[dateString]!;
-                
-                // Sort entries for this date by time (newest first)
-                entriesForDate.sort((a, b) => b.date.compareTo(a.date));
-                
+                final dateKey = sortedDates[index];
+                final entriesForDate = entriesByDate[dateKey]!;
+                final date = entriesForDate.first.date;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Date header
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.calendar_today_rounded, 
-                              size: 14, 
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              _formatDateHeader(date),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          ],
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                      child: Text(
+                        _formatDateHeader(date),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppTheme.textSecondary,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    
-                    // Entries for this date
-                    ...entriesForDate.map((entry) => _buildEntryCard(context, entry)),
+                    ...entriesForDate.map((entry) => _buildEntryCard(context, entry)).toList(),
                   ],
                 );
               },
               childCount: sortedDates.length,
             ),
           ),
-          
           // Bottom padding
           const SliverToBoxAdapter(
             child: SizedBox(height: 80),
@@ -147,85 +147,83 @@ class HomeScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-            Icon(
-              Icons.mic_none_rounded,
-              size: 80,
-              color: AppTheme.textSecondary.withOpacity(0.5),
+          Icon(
+            Icons.mic_none_rounded,
+            size: 80,
+            color: AppTheme.textSecondary.withOpacity(0.5),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'No journal entries yet',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: AppTheme.textSecondary,
             ),
-            const SizedBox(height: 24),
-            Text(
-              'No journal entries yet',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppTheme.textSecondary,
-              ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tap the mic button to record your first entry',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.textSecondary,
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Tap the mic button to record your first entry',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) => const RecordScreen(),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                      const begin = Offset(0.0, 1.0);
-                      const end = Offset.zero;
-                      const curve = Curves.easeInOutCubic;
-                      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                      var offsetAnimation = animation.drive(tween);
-                      return SlideTransition(
-                        position: offsetAnimation,
-                        child: child,
-                      );
-                    },
-                    transitionDuration: AppTheme.mediumAnimationDuration,
-                  ),
-                );
-                // Handle the returned journal entry
-                if (result != null && result is JournalEntry && onEntryAdded != null) {
-                  onEntryAdded!(result);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Journal entry saved successfully!'),
-                        backgroundColor: AppTheme.successGreen,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                        ),
-                        duration: const Duration(seconds: 2),
-                      ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => RecordScreen(),
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(0.0, 1.0);
+                    const end = Offset.zero;
+                    const curve = Curves.easeInOutCubic;
+                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                    var offsetAnimation = animation.drive(tween);
+                    return SlideTransition(
+                      position: offsetAnimation,
+                      child: child,
                     );
-                  }
+                  },
+                  transitionDuration: AppTheme.mediumAnimationDuration,
+                ),
+              );
+              // Handle the returned journal entry
+              if (result != null && result is JournalEntry && widget.onEntryAdded != null) {
+                widget.onEntryAdded!(result);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Journal entry saved successfully!'),
+                      backgroundColor: AppTheme.successGreen,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
                 }
-              },
-              icon: const Icon(Icons.mic_rounded),
-              label: const Text('Start Recording'),
-            ),
-          ],
-        ),
-      );
+              }
+            },
+            icon: const Icon(Icons.mic_rounded),
+            label: const Text('Start Recording'),
+          ),
+        ],
+      ),
+    );
   }
   
   Widget _buildStatsCard(BuildContext context) {
-    final entriesThisWeek = entries.where((entry) {
+    final entriesThisWeek = _entries.where((entry) {
       final now = DateTime.now();
       final weekStart = DateTime(now.year, now.month, now.day - now.weekday + 1);
       return entry.date.isAfter(weekStart);
     }).length;
-    
-    final totalMinutes = entries.fold<int>(0, (sum, entry) {
-      // This is a placeholder. In a real app, you'd get the actual duration
-      return sum + 5; // Assuming 5 minutes per entry for demonstration
-    });
-    
+
+    final totalSeconds = _entries.fold<int>(0, (sum, entry) => sum + (entry.duration ?? 0));
+    final totalMinutes = (totalSeconds / 60).ceil();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -256,7 +254,7 @@ class HomeScreen extends StatelessWidget {
             children: [
               _buildStatItem(
                 context,
-                '${entries.length}',
+                '${_entries.length}',
                 'Total\nEntries',
                 Icons.list_alt_rounded,
               ),
@@ -331,8 +329,8 @@ class HomeScreen extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: () {
-              if (onEntryTap != null) {
-                onEntryTap!(entry);
+              if (widget.onEntryTap != null) {
+                widget.onEntryTap!(entry);
               }
             },
             borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
@@ -463,8 +461,8 @@ class HomeScreen extends StatelessWidget {
                       children: [
                         TextButton.icon(
                           onPressed: () {
-                            if (onEntryTap != null) {
-                              onEntryTap!(entry);
+                            if (widget.onEntryTap != null) {
+                              widget.onEntryTap!(entry);
                             }
                           },
                           icon: const Icon(Icons.play_arrow_rounded, size: 20),
@@ -479,8 +477,8 @@ class HomeScreen extends StatelessWidget {
                         ),
                         TextButton.icon(
                           onPressed: () {
-                            if (onEntryTap != null) {
-                              onEntryTap!(entry);
+                            if (widget.onEntryTap != null) {
+                              widget.onEntryTap!(entry);
                             }
                           },
                           icon: const Icon(Icons.more_horiz_rounded, size: 20),

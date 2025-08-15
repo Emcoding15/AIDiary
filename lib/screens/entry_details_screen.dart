@@ -430,6 +430,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
         audioPath: widget.entry.audioPath,
         transcription: result['transcription'],
         summary: result['summary'],
+        duration: widget.entry.duration,
       );
       widget.onEntryUpdated?.call(updatedEntry);
       ScaffoldMessenger.of(context).showSnackBar(
