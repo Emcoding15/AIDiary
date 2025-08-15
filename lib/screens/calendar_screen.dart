@@ -3,13 +3,14 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../models/journal_entry.dart';
 
+
+import '../services/firebase_service.dart';
+
 class CalendarScreen extends StatefulWidget {
-  final List<JournalEntry> entries;
   final Function(JournalEntry entry)? onEntryTap;
 
   const CalendarScreen({
-    Key? key, 
-    required this.entries,
+    Key? key,
     this.onEntryTap,
   }) : super(key: key);
 
@@ -17,29 +18,51 @@ class CalendarScreen extends StatefulWidget {
   State<CalendarScreen> createState() => _CalendarScreenState();
 }
 
+
 class _CalendarScreenState extends State<CalendarScreen> {
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
   CalendarFormat _calendarFormat = CalendarFormat.month;
 
-  // Map to store entries by day
-  late Map<DateTime, List<JournalEntry>> _entriesByDay;
+  List<JournalEntry> _entries = [];
+  Map<DateTime, List<JournalEntry>> _entriesByDay = {};
+  bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _initEntriesByDay();
+    _loadEntries();
+  }
+
+  Future<void> _loadEntries() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final entries = await FirebaseService().loadJournalEntries();
+      setState(() {
+        _entries = entries;
+        _initEntriesByDay();
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to load entries.';
+        _loading = false;
+      });
+    }
   }
 
   void _initEntriesByDay() {
     _entriesByDay = {};
-    for (var entry in widget.entries) {
+    for (var entry in _entries) {
       final date = DateTime(
-        entry.date.year, 
-        entry.date.month, 
+        entry.date.year,
+        entry.date.month,
         entry.date.day,
       );
-      
       if (_entriesByDay[date] == null) {
         _entriesByDay[date] = [];
       }
@@ -54,6 +77,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_error != null) {
+      return Scaffold(
+        body: Center(child: Text('Failed to load entries.')),
+      );
+    }
     final selectedDayEntries = _getEntriesForDay(_selectedDay);
     // Sort entries by time (newest first for the selected day)
     selectedDayEntries.sort((a, b) => b.date.compareTo(a.date));
