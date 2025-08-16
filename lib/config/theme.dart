@@ -3,24 +3,25 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Color scheme
-  static const Color primaryColor = Color(0xFF6200EE);
-  static const Color primaryVariantColor = Color(0xFF3700B3);
-  static const Color secondaryColor = Color(0xFF03DAC6);
-  static const Color secondaryVariantColor = Color(0xFF018786);
-  static const Color backgroundColor = Color(0xFFF5F5F5);
-  static const Color surfaceColor = Colors.white;
-  static const Color errorColor = Color(0xFFB00020);
+  // Aquamarine: #7FFFD4
+  static const Color primaryColor = Color(0xFF20B2AA); // Deep aquamarine (LightSeaGreen)
+  static const Color primaryVariantColor = Color(0xFF17877B); // Muted teal
+  static const Color secondaryColor = Color(0xFF009688); // Teal
+  static const Color secondaryVariantColor = Color(0xFF00675B); // Darker teal
+  static const Color backgroundColor = Color(0xFFE0F2F1); // Muted teal/gray background
+  static const Color surfaceColor = Color(0xFFF5F5F5); // Very light gray
+  static const Color errorColor = Color(0xFFE57373); // Soft red
 
   // Custom colors
-  static const Color recordingRed = Color(0xFFE53935);
-  static const Color accentBlue = Color(0xFF2196F3);
-  static const Color successGreen = Color(0xFF4CAF50);
-  static const Color warningAmber = Color(0xFFFFC107);
+  static const Color recordingRed = Color(0xFFE57373); // Soft red
+  static const Color accentBlue = Color(0xFF4DD0E1); // Light blue accent
+  static const Color successGreen = Color(0xFF43A047); // Muted green
+  static const Color warningAmber = Color(0xFFFFB300); // Muted amber
 
   // Text colors
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
-  static const Color textHint = Color(0xFF9E9E9E);
+  static const Color textPrimary = Color(0xFF26332C); // Deep muted green/teal
+  static const Color textSecondary = Color(0xFF607D8B); // Blue-grey
+  static const Color textHint = Color(0xFF80CBC4); // Muted aquamarine hint
 
   // Elevation shadows
   static List<BoxShadow> get lightShadow => [
@@ -59,7 +60,7 @@ class AppTheme {
         primaryContainer: primaryVariantColor,
         onPrimaryContainer: Colors.white,
         secondary: secondaryColor,
-        onSecondary: Colors.black,
+        onSecondary: Colors.white,
         secondaryContainer: secondaryVariantColor,
         onSecondaryContainer: Colors.white,
         error: errorColor,
@@ -132,6 +133,7 @@ class AppTheme {
           fontSize: 20,
           color: Colors.white,
         ),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -204,20 +206,22 @@ class AppTheme {
       ),
       
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: surfaceColor,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: textSecondary,
+        backgroundColor: Color(0xFFE0F2F1),
+        selectedItemColor: Color(0xFF20B2AA),
+        unselectedItemColor: Color(0xFF607D8B),
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
       
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: primaryColor,
+        backgroundColor: secondaryColor,
         foregroundColor: Colors.white,
         elevation: 6,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadiusLarge),
         ),
+        focusColor: Color(0xFF17877B),
+        splashColor: Color(0xFF20B2AA),
       ),
       
       dividerTheme: const DividerThemeData(
