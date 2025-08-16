@@ -58,11 +58,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
   void _initEntriesByDay() {
     _entriesByDay = {};
     for (var entry in _entries) {
-      // Always use UTC for grouping
-      final date = DateTime.utc(
-        entry.date.toUtc().year,
-        entry.date.toUtc().month,
-        entry.date.toUtc().day,
+      final date = DateTime(
+        entry.date.year,
+        entry.date.month,
+        entry.date.day,
       );
       if (_entriesByDay[date] == null) {
         _entriesByDay[date] = [];
@@ -72,8 +71,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   List<JournalEntry> _getEntriesForDay(DateTime day) {
-    // Always use UTC for lookup
-    final date = DateTime.utc(day.toUtc().year, day.toUtc().month, day.toUtc().day);
+    final date = DateTime(day.year, day.month, day.day);
     return _entriesByDay[date] ?? [];
   }
 

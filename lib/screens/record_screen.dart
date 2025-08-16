@@ -253,77 +253,118 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
   }
 
   Future<void> _saveRecording() async {
-    if (_isRecording) {
-      await _stopRecording();
-    }
-
-    // Get the file path of the recording
-    final audioPath = _recordingService.currentFilePath;
-    if (audioPath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('No recording found to save'),
-          backgroundColor: AppTheme.errorColor,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-          ),
-        ),
-      );
-      return;
-    }
-
-    // Show loading dialog while processing
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    // Transcribe and summarize in a single request
-    final result = await _aiService.transcribeAndSummarize(audioPath);
-    if (result == null || (result['transcription']?.isEmpty ?? true)) {
-      Navigator.of(context).pop(); // Remove loading dialog
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Failed to transcribe audio.'),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
-      return;
-    }
-    final transcription = result['transcription']!;
-    final summary = result['summary']?.isNotEmpty == true ? result['summary'] : null;
-
-    // Use the AI-generated title, fallback to 'Audio Entry' if empty
-    String generatedTitle = result['title']?.isNotEmpty == true ? result['title']! : 'Audio Entry';
-
-    // Create a new journal entry
-    final journalEntry = JournalEntry(
-      id: _uuid.v4(),
-      title: generatedTitle,
-      date: DateTime.now(),
-      audioPath: audioPath,
-      transcription: transcription,
-      summary: summary,
-      duration: _recordingDuration,
-    );
-
     try {
-      await FirebaseService().saveJournalEntry(journalEntry);
-      print('DEBUG: Entry saved to Firestore!');
-    } catch (e) {
-      print('DEBUG: Failed to save entry to Firestore: $e');
+      if (_isRecording) {
+        await _stopRecording();
+      }
+
+      // Get the file path of the recording
+      final audioPath = _recordingService.currentFilePath;
+      if (audioPath == null) {
+        print('DEBUG: No recording found to save');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('No recording found to save'),
+            backgroundColor: AppTheme.errorColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+            ),
+          ),
+        );
+        return;
+      }
+
+      // Show loading dialog while processing
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      // Transcribe and summarize in a single request
+      Map<String, dynamic>? result;
+      try {
+        result = await _aiService.transcribeAndSummarize(audioPath);
+        print('DEBUG: Transcription result: $result');
+        // Check for missing API key (AIService returns null if no key)
+        if (result == null) {
+          Navigator.of(context).pop(); // Remove loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Please set your API key in Settings before transcribing.'),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+          return;
+        }
+      } catch (e, stack) {
+        print('DEBUG: Error during transcription: $e');
+        print(stack);
+        Navigator.of(context).pop(); // Remove loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to transcribe audio: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+        return;
+      }
+
+      if (result['transcription'] == null || (result['transcription']?.isEmpty ?? true)) {
+        Navigator.of(context).pop(); // Remove loading dialog
+        print('DEBUG: Transcription result is null or empty');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Failed to transcribe audio.'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+        return;
+      }
+      final transcription = result['transcription']!;
+      final summary = result['summary']?.isNotEmpty == true ? result['summary'] : null;
+
+      // Use the AI-generated title, fallback to 'Audio Entry' if empty
+      String generatedTitle = result['title']?.isNotEmpty == true ? result['title']! : 'Audio Entry';
+
+      // Create a new journal entry
+      final journalEntry = JournalEntry(
+        id: _uuid.v4(),
+        title: generatedTitle,
+        date: DateTime.now(),
+        audioPath: audioPath,
+        transcription: transcription,
+        summary: summary,
+        duration: _recordingDuration,
+      );
+
+      try {
+        await FirebaseService().saveJournalEntry(journalEntry);
+        print('DEBUG: Entry saved to Firestore!');
+      } catch (e, stack) {
+        print('DEBUG: Failed to save entry to Firestore: $e');
+        print(stack);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save entry to Firestore: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+
+      Navigator.of(context).pop(); // Remove loading dialog
+      Navigator.pop(context, journalEntry);
+    } catch (e, stack) {
+      print('DEBUG: Unexpected error in _saveRecording: $e');
+      print(stack);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to save entry to Firestore: $e'),
+          content: Text('Unexpected error: $e'),
           backgroundColor: AppTheme.errorColor,
         ),
       );
     }
-
-    Navigator.of(context).pop(); // Remove loading dialog
-    Navigator.pop(context, journalEntry);
   }
 
   String _formatDuration(int seconds) {

@@ -30,20 +30,26 @@ class FirebaseService {
 	final _firestore = FirebaseFirestore.instance;
 	final _auth = FirebaseAuth.instance;
 
-	Future<void> saveJournalEntry(JournalEntry entry) async {
-		final user = _auth.currentUser;
-		if (user == null) throw Exception('No user signed in');
+		Future<void> saveJournalEntry(JournalEntry entry) async {
+			try {
+				final user = _auth.currentUser;
+				if (user == null) throw Exception('No user signed in');
 
-			final data = {
-				'id': entry.id,
-				'userId': user.uid,
-				'title': entry.title,
-				'date': entry.date.toIso8601String(),
-				'audioPath': entry.audioPath,
-				'transcription': entry.transcription,
-				'summary': entry.summary,
-				'duration': entry.duration,
-			};
-			await _firestore.collection('journal_entries').doc(entry.id).set(data);
-	}
+				final data = {
+					'id': entry.id,
+					'userId': user.uid,
+					'title': entry.title,
+					'date': entry.date.toIso8601String(),
+					'audioPath': entry.audioPath,
+					'transcription': entry.transcription,
+					'summary': entry.summary,
+					'duration': entry.duration,
+				};
+				await _firestore.collection('journal_entries').doc(entry.id).set(data);
+			} catch (e, stack) {
+				print('[ERROR] Failed to save journal entry: $e');
+				print(stack);
+				rethrow;
+			}
+		}
 }
