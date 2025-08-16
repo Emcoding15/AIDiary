@@ -1,3 +1,5 @@
+# Ignore Android build reports
+android/build/reports/
 # Miscellaneous
 *.class
 *.log
