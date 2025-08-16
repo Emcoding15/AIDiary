@@ -51,5 +51,9 @@ secrets.json
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
 
+
 # Release builds
 /releases/
+
+# Ignore Flutter web directory
+web/
