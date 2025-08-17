@@ -35,17 +35,6 @@ You can download the latest APK from the [Releases](https://github.com/Emcoding1
 - **Cross-platform:** Android, iOS, Web, Windows, macOS, Linux
 
 
-***
-
-- `lib/`
-  - `main.dart`: App entry point and routing
-  - `models/`: Data models (e.g., `journal_entry.dart`)
-  - `screens/`: UI screens (home, record, entry details, calendar, auth, settings)
-  - `services/`: Core services (AI, audio processing, recording, Firebase, settings)
-  - `config/`: App theming and API config
-- `android/`, `ios/`, `web/`, `windows/`, `macos/`, `linux/`: Platform-specific code and build files
-- `assets/`: App icons and images
-- `test/`: Unit and widget tests
 
 ## Getting Started
 
