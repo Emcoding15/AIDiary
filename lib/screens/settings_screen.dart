@@ -16,6 +16,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _apiKeyController = TextEditingController();
   bool _loading = true;
   String? _error;
+  bool _obscureApiKey = true;
 
   @override
   void initState() {
@@ -64,8 +65,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     TextFormField(
                       controller: _apiKeyController,
-                      decoration: const InputDecoration(
+                      obscureText: _obscureApiKey,
+                      decoration: InputDecoration(
                         hintText: 'Enter your Google AI API key',
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureApiKey ? Icons.visibility : Icons.visibility_off),
+                          onPressed: () {
+                            setState(() {
+                              _obscureApiKey = !_obscureApiKey;
+                            });
+                          },
+                          tooltip: _obscureApiKey ? 'Show API Key' : 'Hide API Key',
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {

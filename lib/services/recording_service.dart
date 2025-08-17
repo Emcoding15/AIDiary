@@ -106,7 +106,7 @@ class RecordingService {
   Future<String> _generateFilePath() async {
     final Directory appDocDir = await getApplicationDocumentsDirectory();
     final String appDocPath = appDocDir.path;
-    final String fileName = 'audio_journal_${_uuid.v4()}.m4a';
+  final String fileName = 'ai_diary_${_uuid.v4()}.m4a';
     return '$appDocPath/$fileName';
   }
 

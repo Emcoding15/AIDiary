@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Audio Journal',
+  title: 'AI Diary',
       theme: AppTheme.getTheme(context),
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
             );
           }
           if (snapshot.hasData) {
-            return const AudioJournalApp();
+            return const AIDiaryApp();
           }
           return const AuthScreen();
         },
@@ -59,14 +59,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AudioJournalApp extends StatefulWidget {
-  const AudioJournalApp({super.key});
+class AIDiaryApp extends StatefulWidget {
+  const AIDiaryApp({super.key});
 
   @override
-  State<AudioJournalApp> createState() => _AudioJournalAppState();
+  State<AIDiaryApp> createState() => _AIDiaryAppState();
 }
 
-class _AudioJournalAppState extends State<AudioJournalApp> with SingleTickerProviderStateMixin {
+class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
   late AnimationController _animationController;
   
@@ -221,7 +221,7 @@ class _AudioJournalAppState extends State<AudioJournalApp> with SingleTickerProv
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Audio Journal'),
+  title: const Text('AI Diary'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
