@@ -56,6 +56,20 @@ dev_dependencies:
     sdk: flutter
   flutter_launcher_icons: ^0.13.1
   flutter_lints: ^6.0.0
+  flutter_native_splash: ^2.4.0
+# Splash screen configuration for flutter_native_splash
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/aid_logo.png
+  android: true
+  ios: true
+  fullscreen: true
+  android_gravity: center
+  ios_content_mode: center
+  android_12:
+    image: assets/aid_logo.png
+    color: "#ffffff"
+    icon_background_color: "#ffffff"
 
 flutter_icons:
   android: true
