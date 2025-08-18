@@ -8,6 +8,7 @@ import '../services/ai_service.dart';
 import 'package:uuid/uuid.dart';
 import '../config/theme.dart';
 import '../services/firebase_service.dart';
+import '../config/api_config.dart';
 
 class RecordScreen extends StatefulWidget {
   const RecordScreen({Key? key}) : super(key: key);

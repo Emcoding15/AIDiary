@@ -46,7 +46,7 @@ class AIService {
         'temperature': 0.0,
         'topK': 1,
         'topP': 1,
-        'maxOutputTokens': 8192
+        'maxOutputTokens': 500000 // Increased to half a million
       }
     };
     final response = await http.post(
