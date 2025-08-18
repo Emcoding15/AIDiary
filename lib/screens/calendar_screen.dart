@@ -5,6 +5,8 @@ import '../models/journal_entry.dart';
 
 
 import '../services/firebase_service.dart';
+import 'record_screen.dart';
+import '../config/theme.dart';
 
 class CalendarScreen extends StatefulWidget {
   final Function(JournalEntry entry)? onEntryTap;
@@ -269,7 +271,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           final result = await Navigator.push(
             context,
             PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => const RecordScreen(),
+              pageBuilder: (context, animation, secondaryAnimation) => RecordScreen(),
               transitionsBuilder: (context, animation, secondaryAnimation, child) {
                 const begin = Offset(0.0, 1.0);
                 const end = Offset.zero;
