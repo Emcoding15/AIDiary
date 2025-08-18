@@ -5,15 +5,15 @@ AI Diary is a modern, voice-first diary app. Instead of typing your thoughts lik
 
 ## Features
 
-- **Voice Recording:** Capture your thoughts with high-quality audio recording.
-- **Audio Processing:** Automatically converts and optimizes your recordings for accurate AI transcription.
-- **AI Transcription & Summarization:** Automatic transcription, summary, and title generation for your audio entries using Google Gemini 2.5 Pro.
-- **Modern UI:** Material 3 design, custom theming, and smooth animations.
-- **Journal Organization:** View entries by date in home and calendar views.
-- **Audio Playback:** Listen to your recorded entries.
-- **Entry Details:** View transcriptions, summaries, and play audio.
-- **Cloud Sync:** Secure storage and sync of entries using Firebase Authentication and Firestore.
-- **Cross-Platform:** Works on Android, iOS, web, Windows, macOS, and Linux.
+- **Voice Recording:** Capture your thoughts with high-quality audio recording using the [`record`](https://pub.dev/packages/record) package.
+- **Audio Processing:** Automatically converts and optimizes your recordings for accurate AI transcription using [`ffmpeg_kit_flutter_new`](https://pub.dev/packages/ffmpeg_kit_flutter_new).
+- **AI Transcription & Summarization:** Automatic transcription, summary, and title generation for your audio entries using [Google Gemini 2.5 Pro](https://ai.google.dev/) via the [`google_generative_ai`](https://pub.dev/packages/google_generative_ai) package.
+- **Modern UI:** Material 3 design, custom theming, and smooth animations built with Flutter's widget system and [`google_fonts`](https://pub.dev/packages/google_fonts).
+- **Journal Organization:** View entries by date in home and calendar views using [`table_calendar`](https://pub.dev/packages/table_calendar).
+- **Audio Playback:** Listen to your recorded entries with [`just_audio`](https://pub.dev/packages/just_audio).
+- **Entry Details:** View transcriptions, summaries, and play audio, all managed in a clean, responsive UI.
+- **Cloud Sync:** Secure storage and sync of entries using [Firebase Authentication](https://firebase.google.com/docs/auth) and [Firestore](https://firebase.google.com/docs/firestore) via [`firebase_auth`](https://pub.dev/packages/firebase_auth) and [`cloud_firestore`](https://pub.dev/packages/cloud_firestore).
+- **Cross-Platform:** Works on Android, iOS, web, Windows, macOS, and Linux, thanks to Flutter's cross-platform capabilities.
 
 (Screenshots will be added soon)
 

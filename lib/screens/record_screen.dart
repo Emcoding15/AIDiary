@@ -287,12 +287,16 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
       try {
         result = await _aiService.transcribeAndSummarize(audioPath);
         print('DEBUG: Transcription result: $result');
-        // Check for missing API key (AIService returns null if no key)
+        // Improved error handling: distinguish missing API key vs. Gemini/API error
         if (result == null) {
           Navigator.of(context).pop(); // Remove loading dialog
+          final apiKey = await ApiConfig.getGoogleAiApiKey();
+          final isApiKeyMissing = apiKey == null || apiKey.trim().isEmpty;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Please set your API key in Settings before transcribing.'),
+              content: Text(isApiKeyMissing
+                  ? 'Please set your API key in Settings before transcribing.'
+                  : 'Transcription failed due to a network or AI service error. Please try again.'),
               backgroundColor: AppTheme.errorColor,
             ),
           );
