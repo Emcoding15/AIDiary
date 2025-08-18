@@ -92,7 +92,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     selectedDayEntries.sort((a, b) => b.date.compareTo(a.date));
 
     return Scaffold(
-  // AppBar removed to avoid double app bar
       body: Column(
         children: [
           TableCalendar(
@@ -264,6 +263,47 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => const RecordScreen(),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                const begin = Offset(0.0, 1.0);
+                const end = Offset.zero;
+                const curve = Curves.easeInOutCubic;
+                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                var offsetAnimation = animation.drive(tween);
+                return SlideTransition(
+                  position: offsetAnimation,
+                  child: child,
+                );
+              },
+              transitionDuration: AppTheme.mediumAnimationDuration,
+            ),
+          );
+          // Auto-refresh entries if a new entry was added
+          if (result != null && result is JournalEntry) {
+            await _loadEntries();
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Journal entry saved successfully!'),
+                  backgroundColor: AppTheme.successGreen,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
+          }
+        },
+        elevation: 4,
+        child: const Icon(Icons.mic_rounded),
       ),
     );
   }

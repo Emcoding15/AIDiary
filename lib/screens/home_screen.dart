@@ -188,9 +188,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   transitionDuration: AppTheme.mediumAnimationDuration,
                 ),
               );
-              // Handle the returned journal entry
-              if (result != null && result is JournalEntry && widget.onEntryAdded != null) {
-                widget.onEntryAdded!(result);
+              // Auto-refresh entries if a new entry was added
+              if (result != null && result is JournalEntry) {
+                await _loadEntries();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
