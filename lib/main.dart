@@ -69,20 +69,10 @@ class AIDiaryApp extends StatefulWidget {
 class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
   late AnimationController _animationController;
-  
-  // Sample data for demonstration
-  final List<JournalEntry> _entries = [
-    /* Comment out sample entries with invalid paths
-    JournalEntry(
-      id: '1',
-      title: 'Morning Reflection',
-      date: DateTime.now().subtract(const Duration(days: 1)),
-      audioPath: '/path/to/audio.m4a',
-      transcription: 'This is a sample transcription of my morning reflection.',
-      summary: 'A brief summary of my morning thoughts and plans for the day.',
-    ),
-    */
-  ];
+
+  // GlobalKeys for HomeScreen and CalendarScreen
+  final GlobalKey<HomeScreenState> _homeKey = GlobalKey<HomeScreenState>();
+  final GlobalKey<CalendarScreenState> _calendarKey = GlobalKey<CalendarScreenState>();
 
   @override
   void initState() {
@@ -113,22 +103,12 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
     _animationController.forward();
   }
   
-  // Add a new journal entry
-  void _addJournalEntry(JournalEntry entry) {
-    setState(() {
-      _entries.add(entry);
-    });
-  }
 
-  // Update an existing journal entry
-  void _updateJournalEntry(JournalEntry updatedEntry) {
-    setState(() {
-      final index = _entries.indexWhere((entry) => entry.id == updatedEntry.id);
-      if (index != -1) {
-        _entries[index] = updatedEntry;
-      }
-    });
-  }
+    // Add a new journal entry (no-op, handled by HomeScreen/CalendarScreen)
+    void _addJournalEntry(JournalEntry entry) {}
+
+    // Update an existing journal entry (no-op, handled by HomeScreen/CalendarScreen)
+    void _updateJournalEntry(JournalEntry updatedEntry) {}
 
   // Navigate to the record screen
   Future<void> _navigateToRecordScreen(BuildContext context) async {
@@ -140,10 +120,10 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
           const begin = Offset(0.0, 1.0);
           const end = Offset.zero;
           const curve = Curves.easeInOutCubic;
-          
+
           var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
           var offsetAnimation = animation.drive(tween);
-          
+
           return SlideTransition(
             position: offsetAnimation,
             child: child,
@@ -152,11 +132,18 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
         transitionDuration: AppTheme.mediumAnimationDuration,
       ),
     );
-    
+
     // Handle the returned journal entry
     if (result != null && result is JournalEntry) {
       _addJournalEntry(result);
-      
+
+      // Refresh the correct screen after saving
+      if (_selectedIndex == 0) {
+        _homeKey.currentState?.loadEntries();
+      } else if (_selectedIndex == 1) {
+        _calendarKey.currentState?.loadEntries();
+      }
+
       // Show a confirmation message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -207,6 +194,7 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
       FadeTransition(
         opacity: _animationController,
         child: HomeScreen(
+          key: _homeKey,
           onEntryTap: (entry) => _navigateToEntryDetailsScreen(context, entry),
           onEntryAdded: _addJournalEntry,
         ),
@@ -214,6 +202,7 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
       FadeTransition(
         opacity: _animationController,
         child: CalendarScreen(
+          key: _calendarKey,
           onEntryTap: (entry) => _navigateToEntryDetailsScreen(context, entry),
         ),
       ),

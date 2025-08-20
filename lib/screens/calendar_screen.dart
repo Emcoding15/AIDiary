@@ -17,11 +17,11 @@ class CalendarScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<CalendarScreen> createState() => _CalendarScreenState();
+  State<CalendarScreen> createState() => CalendarScreenState();
 }
 
 
-class _CalendarScreenState extends State<CalendarScreen> {
+class CalendarScreenState extends State<CalendarScreen> {
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
   CalendarFormat _calendarFormat = CalendarFormat.month;
@@ -34,11 +34,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   void initState() {
     super.initState();
-    _loadEntries();
+      loadEntries();
   }
 
-  Future<void> _loadEntries() async {
-    setState(() {
+    Future<void> loadEntries() async {
+  setState(() {
       _loading = true;
       _error = null;
     });
@@ -289,7 +289,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           );
           // Auto-refresh entries if a new entry was added
           if (result != null && result is JournalEntry) {
-            await _loadEntries();
+            await loadEntries();
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

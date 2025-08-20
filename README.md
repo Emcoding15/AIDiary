@@ -1,7 +1,7 @@
 
 # AI Diary
 
-AI Diary is a modern, voice-first diary app. Instead of typing your thoughts like in a traditional journal, you simply speak—and the app records, transcribes, summarizes, and organizes your entries for you using advanced AI. Capture your day, ideas, or reflections hands-free, and let AI handle the rest.
+AI Diary is an AI-Powered, voice-first diary app. Instead of typing your thoughts like in a traditional journal, you simply speak—and the app records, transcribes, summarizes, and organizes your entries for you using advanced AI. Capture your day, ideas, or reflections hands-free, and let AI handle the rest.
 
 ## Features
 

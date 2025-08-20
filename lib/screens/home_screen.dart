@@ -15,10 +15,10 @@ class HomeScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   List<JournalEntry> _entries = [];
   bool _loading = true;
   String? _error;
@@ -26,10 +26,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadEntries();
+    loadEntries();
   }
 
-  Future<void> _loadEntries() async {
+  Future<void> loadEntries() async {
     setState(() {
       _loading = true;
       _error = null;
@@ -102,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
           // Auto-refresh entries if a new entry was added
           if (result != null && result is JournalEntry) {
-            await _loadEntries();
+            await loadEntries();
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -232,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
               );
               // Auto-refresh entries if a new entry was added
               if (result != null && result is JournalEntry) {
-                await _loadEntries();
+                await loadEntries();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
