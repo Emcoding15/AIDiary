@@ -33,6 +33,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
   bool _isGeneratingSummary = false;
   String? _transcription;
   String? _summary;
+  String? _suggestions;
   
   // Animation controller for content transitions
   late AnimationController _animationController;
@@ -45,6 +46,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
     _loadFileSize();
     _transcription = widget.entry.transcription;
     _summary = widget.entry.summary;
+    _suggestions = widget.entry.suggestions;
     
     // Initialize animations
     _animationController = AnimationController(
@@ -422,6 +424,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
         _isGeneratingSummary = false;
         _transcription = result['transcription'];
         _summary = result['summary'];
+        _suggestions = result['suggestions'];
       });
       final updatedEntry = JournalEntry(
         id: widget.entry.id,
@@ -430,8 +433,10 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
         audioPath: widget.entry.audioPath,
         transcription: result['transcription'],
         summary: result['summary'],
+        suggestions: result['suggestions'],
         duration: widget.entry.duration,
       );
+  
       widget.onEntryUpdated?.call(updatedEntry);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -498,6 +503,8 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                 // Summary section
                 _buildSummarySection(),
                 
+                // Suggestions section
+                _buildSuggestionsSection(),
                 // Bottom padding
                 const SizedBox(height: 40),
               ],
@@ -812,6 +819,59 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                   ),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSuggestionsSection() {
+  print("[DEBUG] _suggestions value: ${_suggestions}");
+    if (_suggestions == null || _suggestions!.trim().isEmpty) {
+      return const SizedBox.shrink();
+    }
+    // Try splitting by newlines first
+    List<String> lines = _suggestions!.split('\n').where((l) => l.trim().isNotEmpty).toList();
+    // If only one line, try splitting by ' - '
+    if (lines.length <= 1 && _suggestions!.contains(' - ')) {
+      lines = _suggestions!
+          .split(' - ')
+          .map((l) => l.trim())
+          .where((l) => l.isNotEmpty)
+          .toList();
+      // Remove leading dash if present
+      if (lines.isNotEmpty && lines[0].startsWith('-')) {
+        lines[0] = lines[0].substring(1).trim();
+      }
+    }
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.tips_and_updates_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
+                const SizedBox(width: 8),
+                Text('Suggestions', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...lines.map((line) => Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('• ', style: TextStyle(fontSize: 20, height: 1.3)),
+                  Expanded(child: Text(line.trim(), style: Theme.of(context).textTheme.bodyMedium)),
+                ],
+              ),
+            )),
           ],
         ),
       ),

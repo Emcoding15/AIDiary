@@ -341,6 +341,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
         audioPath: audioPath,
         transcription: transcription,
         summary: summary,
+        suggestions: result['suggestions'],
         duration: _recordingDuration,
       );
 

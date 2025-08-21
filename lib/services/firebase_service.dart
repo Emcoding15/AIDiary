@@ -16,15 +16,7 @@ class FirebaseService {
 
 		return query.docs.map((doc) {
 			final data = doc.data();
-				return JournalEntry(
-					id: data['id'] ?? doc.id,
-					title: data['title'] ?? '',
-					date: DateTime.tryParse(data['date'] ?? '') ?? DateTime.now(),
-					audioPath: data['audioPath'],
-					transcription: data['transcription'],
-					summary: data['summary'],
-					duration: data['duration'] ?? 0,
-				);
+			return JournalEntry.fromMap(data);
 		}).toList();
 	}
 	final _firestore = FirebaseFirestore.instance;
@@ -35,17 +27,9 @@ class FirebaseService {
 				final user = _auth.currentUser;
 				if (user == null) throw Exception('No user signed in');
 
-				final data = {
-					'id': entry.id,
-					'userId': user.uid,
-					'title': entry.title,
-					'date': entry.date.toIso8601String(),
-					'audioPath': entry.audioPath,
-					'transcription': entry.transcription,
-					'summary': entry.summary,
-					'duration': entry.duration,
-				};
-				await _firestore.collection('journal_entries').doc(entry.id).set(data);
+				   final data = entry.toMap();
+				   data['userId'] = user.uid;
+				   await _firestore.collection('journal_entries').doc(entry.id).set(data);
 			} catch (e, stack) {
 				print('[ERROR] Failed to save journal entry: $e');
 				print(stack);
