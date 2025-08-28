@@ -195,19 +195,18 @@ class HomeScreenState extends State<HomeScreen> {
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
-                final dateKey = sortedDates[index];
-                final entriesForDate = entriesByDate[dateKey]!;
-                final date = entriesForDate.first.date;
+                final date = sortedDates[index];
+                final entriesForDate = entriesByDate[date]!;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 28, 16, 10),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                       child: Text(
-                        _formatDateHeader(date),
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        _formatDateHeader(DateTime.parse(date)),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: AppTheme.textSecondary,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           letterSpacing: 0.1,
                         ),
                       ),
@@ -316,14 +315,21 @@ class HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Color(0xFF4EE0BD),
-            Color(0xFF34BFA3), // Slightly darker teal for depth
+            Color(0xFF43E97B), // Green
+            Color(0xFF38F9D7), // Aqua
+            Color(0xFF1E3C72), // Deep blue
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
         borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-        boxShadow: AppTheme.lightShadow,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 24,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
