@@ -693,6 +693,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                 child: Text(
                   _transcription!,
                   style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.justify,
                 ),
               )
             else if (_isTranscribing)
@@ -812,6 +813,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                 child: Text(
                   _summary!,
                   style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.justify,
                 ),
               )
             else if (_isGeneratingSummary)
