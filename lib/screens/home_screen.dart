@@ -4,6 +4,8 @@ import '../models/journal_entry.dart';
 import '../services/firebase_service.dart';
 import '../config/theme.dart';
 import 'record_screen.dart';
+import 'entry_details_screen.dart';
+
 class HomeScreen extends StatefulWidget {
   final Function(JournalEntry entry)? onEntryTap;
   final Function(JournalEntry entry)? onEntryAdded;
@@ -100,7 +102,7 @@ class HomeScreenState extends State<HomeScreen> {
               transitionDuration: AppTheme.mediumAnimationDuration,
             ),
           );
-          // Auto-refresh entries if a new entry was added
+          // Auto-refresh entries if a new entry was added or deleted
           if (result != null && result is JournalEntry) {
             await loadEntries();
             if (context.mounted) {
@@ -108,6 +110,22 @@ class HomeScreenState extends State<HomeScreen> {
                 SnackBar(
                   content: const Text('Journal entry saved successfully!'),
                   backgroundColor: AppTheme.successGreen,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                  ),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
+          } else if (result == true) {
+            // Entry was deleted
+            await loadEntries();
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Journal entry deleted.'),
+                  backgroundColor: Colors.red,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
@@ -370,9 +388,28 @@ class HomeScreenState extends State<HomeScreen> {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () {
-              if (widget.onEntryTap != null) {
-                widget.onEntryTap!(entry);
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EntryDetailsScreen(entry: entry),
+                ),
+              );
+              if (result == true) {
+                await loadEntries();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Journal entry deleted.'),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
               }
             },
             borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
@@ -518,9 +555,28 @@ class HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         TextButton.icon(
-                          onPressed: () {
-                            if (widget.onEntryTap != null) {
-                              widget.onEntryTap!(entry);
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EntryDetailsScreen(entry: entry),
+                              ),
+                            );
+                            if (result == true) {
+                              await loadEntries();
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text('Journal entry deleted.'),
+                                    backgroundColor: Colors.red,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                                    ),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              }
                             }
                           },
                           icon: const Icon(Icons.more_horiz_rounded, size: 20),
