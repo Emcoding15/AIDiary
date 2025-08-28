@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:wave/wave.dart';
+import 'package:wave/config.dart';
 import '../models/journal_entry.dart';
 import '../services/firebase_service.dart';
 import '../config/theme.dart';
@@ -20,7 +22,13 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => HomeScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _gradientController;
+  late Animation<double> _gradientAnimation;
+  late Animation<Color?> _color1;
+  late Animation<Color?> _color2;
+  late Animation<Color?> _color3;
+
   List<JournalEntry> _entries = [];
   bool _loading = true;
   String? _error;
@@ -29,6 +37,32 @@ class HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     loadEntries();
+
+    _gradientController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 12),
+    )..repeat(reverse: true);
+    _gradientAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _gradientController, curve: Curves.easeInOutCubic),
+    );
+    _color1 = ColorTween(
+      begin: const Color(0xFF43E97B), // Green
+      end: const Color(0xFF38F9D7), // Aqua
+    ).animate(_gradientController);
+    _color2 = ColorTween(
+      begin: const Color(0xFF38F9D7), // Aqua
+      end: const Color(0xFF1E3C72), // Deep blue
+    ).animate(_gradientController);
+    _color3 = ColorTween(
+      begin: const Color(0xFF1E3C72), // Deep blue
+      end: const Color(0xFF43E97B), // Green
+    ).animate(_gradientController);
+  }
+
+  @override
+  void dispose() {
+    _gradientController.dispose();
+    super.dispose();
   }
 
   Future<void> loadEntries() async {
@@ -311,17 +345,8 @@ class HomeScreenState extends State<HomeScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(0),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFF43E97B), // Green
-            Color(0xFF38F9D7), // Aqua
-            Color(0xFF1E3C72), // Deep blue
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
         borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
         boxShadow: [
           BoxShadow(
@@ -330,43 +355,97 @@ class HomeScreenState extends State<HomeScreen> {
             offset: Offset(0, 8),
           ),
         ],
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF38F9D7), // Aqua (top)
+            Color(0xFF1DE9B6), // Bright teal (middle)
+            Color(0xFF13BBAF), // Subtle medium teal (bottom)
+          ],
+          stops: [0.0, 0.7, 1.0],
+        ),
       ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+        child: Stack(
           children: [
-            Text(
-              'Your Progress',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Color(0xFF1A2B2E),
-                fontWeight: FontWeight.bold,
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                margin: const EdgeInsets.only(top: 28), // slightly higher
+                height: 185,
+                width: double.infinity,
+                child: WaveWidget(
+                  config: CustomConfig(
+                    gradients: [
+                      [
+                        Color(0xFF38F9D7), // Aqua
+                        Color(0xFF1DE9B6), // Bright teal
+                        Color(0xFF13BBAF), // Medium teal
+                      ],
+                      [
+                        Color(0xFF13BBAF), // Medium teal
+                        Color(0xFF1DE9B6), // Bright teal
+                        Color(0xFF38F9D7), // Aqua
+                      ],
+                    ],
+                    durations: [3500, 19440],
+                    heightPercentages: [0.22, 0.25],
+                    blur: MaskFilter.blur(BlurStyle.solid, 2),
+                    gradientBegin: Alignment.topLeft,
+                    gradientEnd: Alignment.bottomRight,
+                  ),
+                  waveAmplitude: 10,
+                  backgroundColor: Colors.transparent,
+                  size: const Size(double.infinity, double.infinity),
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                _buildStatItem(
-                  context,
-                  '${_entries.length}',
-                'Total\nEntries',
-                Icons.list_alt_rounded,
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your Progress',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Color(0xFF1A2B2E),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _buildStatItem(
+                        context,
+                        '${_entries.length}',
+                        'Total\nEntries',
+                        Icons.list_alt_rounded,
+                      ),
+                      const SizedBox(width: 24),
+                      _buildStatItem(
+                        context,
+                        '$entriesThisWeek',
+                        'Entries\nThis Week',
+                        Icons.calendar_today_rounded,
+                      ),
+                      const SizedBox(width: 24),
+                      _buildStatItem(
+                        context,
+                        '$totalMinutes',
+                        'Total\nMinutes',
+                        Icons.access_time_rounded,
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 24),
-              _buildStatItem(
-                context,
-                '$entriesThisWeek',
-                'Entries\nThis Week',
-                Icons.calendar_today_rounded,
-              ),
-              const SizedBox(width: 24),
-              _buildStatItem(
-                context,
-                '$totalMinutes',
-                'Total\nMinutes',
-                Icons.access_time_rounded,
-              ),
-            ],
-          ), // <-- Added missing parenthesis here
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
