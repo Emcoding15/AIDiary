@@ -204,7 +204,9 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                 Text(
                   'Audio Recording',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                    color: Colors.white,
                   ),
                 ),
                 const Spacer(),
@@ -544,6 +546,8 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                 // Summary section
                 _buildSummarySection(),
                 
+                const SizedBox(height: 32),
+                
                 // Suggestions section
                 _buildSuggestionsSection(),
                 // Bottom padding
@@ -643,14 +647,16 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
               children: [
                 Icon(
                   Icons.text_fields_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 20,
+                  color: Color(0xFF4EE0BD),
+                  size: 22,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Transcription',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                    color: Colors.white,
                   ),
                 ),
                 const Spacer(),
@@ -678,6 +684,8 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                   ),
               ],
             ),
+            const SizedBox(height: 4),
+            Container(height: 2, color: Color(0xFF232B3A)),
             const SizedBox(height: 16),
             if (_transcription != null && _transcription!.isNotEmpty)
               Container(
@@ -763,14 +771,16 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
               children: [
                 Icon(
                   Icons.summarize_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 20,
+                  color: Color(0xFF4EE0BD),
+                  size: 22,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Summary',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                    color: Colors.white,
                   ),
                 ),
                 const Spacer(),
@@ -798,6 +808,8 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                   ),
               ],
             ),
+            const SizedBox(height: 4),
+            Container(height: 2, color: Color(0xFF232B3A)),
             const SizedBox(height: 16),
             if (_summary != null && _summary!.isNotEmpty)
               Container(
@@ -899,11 +911,17 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
           children: [
             Row(
               children: [
-                Icon(Icons.tips_and_updates_rounded, color: Theme.of(context).colorScheme.primary, size: 20),
+                Icon(Icons.tips_and_updates_rounded, color: Color(0xFF4EE0BD), size: 22),
                 const SizedBox(width: 8),
-                Text('Suggestions', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text('Suggestions', style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 20,
+                  color: Colors.white,
+                )),
               ],
             ),
+            const SizedBox(height: 4),
+            Container(height: 2, color: Color(0xFF232B3A)),
             const SizedBox(height: 16),
             ...lines.map((line) => Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
@@ -963,4 +981,4 @@ class WaveformPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return false;
   }
-} 
+}
