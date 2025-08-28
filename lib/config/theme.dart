@@ -8,8 +8,8 @@ class AppTheme {
   static const Color primaryVariantColor = Color(0xFF17877B); // Muted teal
   static const Color secondaryColor = Color(0xFF009688); // Teal
   static const Color secondaryVariantColor = Color(0xFF00675B); // Darker teal
-  static const Color backgroundColor = Color(0xFFE0F2F1); // Muted teal/gray background
-  static const Color surfaceColor = Color(0xFFF5F5F5); // Very light gray
+  static const Color backgroundColor = Color(0xFF030B17); // Very dark blue/black background
+  static const Color surfaceColor = Color(0xFF192132); // Slightly lighter dark for cards
   static const Color errorColor = Color(0xFFE57373); // Soft red
 
   // Custom colors
@@ -19,16 +19,16 @@ class AppTheme {
   static const Color warningAmber = Color(0xFFFFB300); // Muted amber
 
   // Text colors
-  static const Color textPrimary = Color(0xFF26332C); // Deep muted green/teal
-  static const Color textSecondary = Color(0xFF607D8B); // Blue-grey
+  static const Color textPrimary = Color(0xFFFFFFFF); // White for high contrast
+  static const Color textSecondary = Color(0xFFB0B8C1); // Light gray for secondary text
   static const Color textHint = Color(0xFF80CBC4); // Muted aquamarine hint
 
   // Elevation shadows
   static List<BoxShadow> get lightShadow => [
         BoxShadow(
-          color: Colors.black.withOpacity(0.04),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
+          color: Colors.black.withOpacity(0.12),
+          blurRadius: 12,
+          offset: const Offset(0, 6),
         ),
       ];
 
@@ -69,6 +69,11 @@ class AppTheme {
         onBackground: textPrimary,
         surface: surfaceColor,
         onSurface: textPrimary,
+      ),
+      cardTheme: const CardThemeData(
+      color: Color(0xFF192132),
+      elevation: 0,
+      margin: EdgeInsets.zero,
       ),
       
       // Typography
@@ -124,7 +129,7 @@ class AppTheme {
       
       // Component themes
       appBarTheme: AppBarTheme(
-        backgroundColor: primaryColor,
+  backgroundColor: backgroundColor,
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
@@ -206,19 +211,19 @@ class AppTheme {
       ),
       
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Color(0xFFE0F2F1),
-        selectedItemColor: Color(0xFF20B2AA),
-        unselectedItemColor: Color(0xFF607D8B),
+  backgroundColor: Color(0xFF101828),
+  selectedItemColor: Color(0xFF4EE0BD),
+  unselectedItemColor: Color(0xFFB0B8C1),
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
       
-      floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: secondaryColor,
-        foregroundColor: Colors.white,
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: Color(0xFF4EE0BD),
+        foregroundColor: Color(0xFF1A2B2E),
         elevation: 6,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(borderRadiusLarge),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
         focusColor: Color(0xFF17877B),
         splashColor: Color(0xFF20B2AA),

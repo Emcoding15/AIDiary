@@ -137,7 +137,11 @@ class HomeScreenState extends State<HomeScreen> {
           }
         },
         elevation: 4,
-        child: const Icon(Icons.mic_rounded),
+        child: Icon(
+          Icons.mic_rounded,
+          color: Color(0xFF1A2B2E),
+          size: 24,
+        ),
       ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
@@ -290,8 +294,8 @@ class HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.primaryContainer,
+            Color(0xFF4EE0BD),
+            Color(0xFF34BFA3), // Slightly darker teal for depth
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -299,22 +303,22 @@ class HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
         boxShadow: AppTheme.lightShadow,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Your Progress',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your Progress',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Color(0xFF1A2B2E),
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _buildStatItem(
-                context,
-                '${_entries.length}',
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _buildStatItem(
+                  context,
+                  '${_entries.length}',
                 'Total\nEntries',
                 Icons.list_alt_rounded,
               ),
@@ -350,8 +354,8 @@ class HomeScreenState extends State<HomeScreen> {
         children: [
           Icon(
             icon,
-            color: Colors.white.withOpacity(0.8),
-            size: 20,
+            color: Color(0xFF1A2B2E),
+            size: 28,
           ),
           const SizedBox(height: 8),
           Text(
@@ -359,7 +363,7 @@ class HomeScreenState extends State<HomeScreen> {
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+                  color: Color(0xFF1A2B2E),
             ),
           ),
           const SizedBox(height: 4),
@@ -367,7 +371,7 @@ class HomeScreenState extends State<HomeScreen> {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withOpacity(0.8),
+                  color: Color(0xFF1A2B2E),
               height: 1.2,
             ),
             textAlign: TextAlign.center,
