@@ -881,11 +881,11 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
   }
 
   Widget _buildSuggestionsSection() {
-  print("[DEBUG] _suggestions value: ${_suggestions}");
+    // Remove debug print for production
     if (_suggestions == null || _suggestions!.trim().isEmpty) {
       return const SizedBox.shrink();
     }
-    // Try splitting by newlines first
+    // Split suggestions into lines
     List<String> lines = _suggestions!.split('\n').where((l) => l.trim().isNotEmpty).toList();
     // If only one line, try splitting by ' - '
     if (lines.length <= 1 && _suggestions!.contains(' - ')) {
@@ -894,11 +894,14 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
           .map((l) => l.trim())
           .where((l) => l.isNotEmpty)
           .toList();
-      // Remove leading dash if present
-      if (lines.isNotEmpty && lines[0].startsWith('-')) {
-        lines[0] = lines[0].substring(1).trim();
-      }
     }
+    // Clean up each line: remove leading dashes or bullets
+    lines = lines.map((l) {
+      String cleaned = l.trim();
+      if (cleaned.startsWith('-')) cleaned = cleaned.substring(1).trim();
+      if (cleaned.startsWith('•')) cleaned = cleaned.substring(1).trim();
+      return cleaned;
+    }).toList();
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -924,12 +927,22 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
             Container(height: 2, color: Color(0xFF232B3A)),
             const SizedBox(height: 16),
             ...lines.map((line) => Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
+              padding: const EdgeInsets.only(bottom: 10.0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('• ', style: TextStyle(fontSize: 20, height: 1.3)),
-                  Expanded(child: Text(line.trim(), style: Theme.of(context).textTheme.bodyMedium)),
+                  const Text('•', style: TextStyle(fontSize: 28, height: 1.1, color: Color(0xFF4EE0BD))),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      line,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        height: 1.5,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.justify,
+                    ),
+                  ),
                 ],
               ),
             )),
