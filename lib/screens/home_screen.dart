@@ -59,7 +59,16 @@ class HomeScreenState extends State<HomeScreen> {
     }
     if (_error != null) {
       return Scaffold(
-        body: Center(child: Text('Failed to load entries.')),
+        body: Center(
+          child: Text(
+            'Failed to load entries.',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: AppTheme.errorColor,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
       );
     }
     if (_entries.isEmpty) {
@@ -157,14 +166,20 @@ class HomeScreenState extends State<HomeScreen> {
                     'Welcome back',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.2,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Your Journal',
-                    style: Theme.of(context).textTheme.displaySmall,
+                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 36,
+                      letterSpacing: -0.5,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   if (_entries.isNotEmpty) _buildStatsCard(context),
                 ],
               ),
@@ -181,12 +196,13 @@ class HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                      padding: const EdgeInsets.fromLTRB(16, 28, 16, 10),
                       child: Text(
                         _formatDateHeader(date),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: AppTheme.textSecondary,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.1,
                         ),
                       ),
                     ),
@@ -205,7 +221,7 @@ class HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
