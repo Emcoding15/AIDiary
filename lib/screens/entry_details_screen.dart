@@ -5,6 +5,7 @@ import '../services/ai_service.dart';
 import 'package:just_audio/just_audio.dart';
 import '../config/theme.dart';
 import 'package:intl/intl.dart';
+import '../services/firebase_service.dart';
 
 class EntryDetailsScreen extends StatefulWidget {
   final JournalEntry entry;
@@ -475,6 +476,46 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
       appBar: AppBar(
         title: Text(widget.entry.title),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Delete Entry',
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Delete Entry'),
+                  content: const Text('Are you sure you want to delete this entry? This action cannot be undone.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                try {
+                  await FirebaseService().deleteJournalEntry(widget.entry.id);
+                  if (mounted) {
+                    Navigator.of(context).pop(true); // Optionally pass true to indicate deletion
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to delete entry: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ],
       ),
       body: FadeTransition(
         opacity: _fadeAnimation,

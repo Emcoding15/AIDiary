@@ -36,4 +36,15 @@ class FirebaseService {
 				rethrow;
 			}
 		}
+	Future<void> deleteJournalEntry(String entryId) async {
+		try {
+			final user = _auth.currentUser;
+			if (user == null) throw Exception('No user signed in');
+			await _firestore.collection('journal_entries').doc(entryId).delete();
+		} catch (e, stack) {
+			print('[ERROR] Failed to delete journal entry: $e');
+			print(stack);
+			rethrow;
+		}
+	}
 }
