@@ -348,19 +348,39 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
       try {
         await FirebaseService().saveJournalEntry(journalEntry);
         print('DEBUG: Entry saved to Firestore!');
+        // Show success SnackBar before popping
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Journal entry saved successfully!'),
+              backgroundColor: AppTheme.successGreen,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+              ),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+          // Wait a short moment to ensure SnackBar is visible
+          await Future.delayed(const Duration(milliseconds: 400));
+        }
+        Navigator.of(context).pop(); // Remove loading dialog
+        Navigator.pop(context, journalEntry);
       } catch (e, stack) {
         print('DEBUG: Failed to save entry to Firestore: $e');
         print(stack);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save entry to Firestore: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        // Show error SnackBar before popping if still mounted
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to save entry to Firestore: $e'),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+          await Future.delayed(const Duration(milliseconds: 400));
+        }
+        Navigator.of(context).pop(); // Remove loading dialog
       }
-
-      Navigator.of(context).pop(); // Remove loading dialog
-      Navigator.pop(context, journalEntry);
     } catch (e, stack) {
       print('DEBUG: Unexpected error in _saveRecording: $e');
       print(stack);
