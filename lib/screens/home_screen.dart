@@ -90,66 +90,72 @@ class HomeScreenState extends State<HomeScreen> {
       ..sort((a, b) => b.compareTo(a));
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'home_fab',
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => RecordScreen(),
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                const begin = Offset(0.0, 1.0);
-                const end = Offset.zero;
-                const curve = Curves.easeInOutCubic;
-                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                var offsetAnimation = animation.drive(tween);
-                return SlideTransition(
-                  position: offsetAnimation,
-                  child: child,
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          boxShadow: AppTheme.lightShadow,
+          borderRadius: BorderRadius.circular(32),
+        ),
+        child: FloatingActionButton(
+          heroTag: 'home_fab',
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) => RecordScreen(),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(0.0, 1.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeInOutCubic;
+                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                  var offsetAnimation = animation.drive(tween);
+                  return SlideTransition(
+                    position: offsetAnimation,
+                    child: child,
+                  );
+                },
+                transitionDuration: AppTheme.mediumAnimationDuration,
+              ),
+            );
+            // Auto-refresh entries if a new entry was added or deleted
+            if (result != null && result is JournalEntry) {
+              await loadEntries();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Journal entry saved successfully!'),
+                    backgroundColor: AppTheme.successGreen,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                    ),
+                    duration: const Duration(seconds: 2),
+                  ),
                 );
-              },
-              transitionDuration: AppTheme.mediumAnimationDuration,
-            ),
-          );
-          // Auto-refresh entries if a new entry was added or deleted
-          if (result != null && result is JournalEntry) {
-            await loadEntries();
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Journal entry saved successfully!'),
-                  backgroundColor: AppTheme.successGreen,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+              }
+            } else if (result == true) {
+              // Entry was deleted
+              await loadEntries();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Journal entry deleted.'),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                    ),
+                    duration: const Duration(seconds: 2),
                   ),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
+                );
+              }
             }
-          } else if (result == true) {
-            // Entry was deleted
-            await loadEntries();
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Journal entry deleted.'),
-                  backgroundColor: Colors.red,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                  ),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            }
-          }
-        },
-        elevation: 4,
-        child: Icon(
-          Icons.mic_rounded,
-          color: Color(0xFF1A2B2E),
-          size: 24,
+          },
+          elevation: 0,
+          child: Icon(
+            Icons.mic_rounded,
+            color: Color(0xFF1A2B2E),
+            size: 24,
+          ),
         ),
       ),
       body: CustomScrollView(
@@ -437,7 +443,7 @@ class HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 color: Theme.of(context).cardTheme.color,
                 borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                boxShadow: AppTheme.lightShadow,
+                boxShadow: AppTheme.mediumShadow,
               ),
               child: SingleChildScrollView(
                 child: Column(
