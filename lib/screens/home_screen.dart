@@ -375,8 +375,8 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
               right: 0,
               bottom: 0,
               child: Container(
-                margin: const EdgeInsets.only(top: 28), // slightly higher
-                height: 185,
+                  margin: const EdgeInsets.only(top: 32), // lower the wave
+                  height: 185,
                 width: double.infinity,
                 child: WaveWidget(
                   config: CustomConfig(
@@ -392,13 +392,13 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                         Color(0xFF38F9D7), // Aqua
                       ],
                     ],
-                    durations: [3500, 19440],
+                    durations: [4500, 19440],
                     heightPercentages: [0.22, 0.25],
                     blur: MaskFilter.blur(BlurStyle.solid, 2),
-                    gradientBegin: Alignment.topLeft,
-                    gradientEnd: Alignment.bottomRight,
+                    gradientBegin: Alignment.centerLeft,
+                    gradientEnd: Alignment.centerRight,
                   ),
-                  waveAmplitude: 10,
+                  waveAmplitude: 3,
                   backgroundColor: Colors.transparent,
                   size: const Size(double.infinity, double.infinity),
                 ),
