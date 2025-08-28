@@ -909,7 +909,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('• ', style: TextStyle(fontSize: 20, height: 1.3)),
-                  Text(line.trim(), style: Theme.of(context).textTheme.bodyMedium),
+                  Expanded(child: Text(line.trim(), style: Theme.of(context).textTheme.bodyMedium)),
                 ],
               ),
             )),

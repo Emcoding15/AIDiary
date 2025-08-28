@@ -419,17 +419,18 @@ class HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
                 boxShadow: AppTheme.lightShadow,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Card header
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Entry icon with status indicator
-                        Stack(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Card header
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Entry icon with status indicator
+                          Stack(
                           children: [
                             Container(
                               width: 48,
