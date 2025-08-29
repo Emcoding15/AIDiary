@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import 'package:just_audio/just_audio.dart';
@@ -90,62 +91,26 @@ class AudioControls extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
+            // Dynamic progress bar (step 3)
+            Builder(
+              builder: (context) {
+                double progress = (duration.inMilliseconds > 0)
+                    ? position.inMilliseconds / duration.inMilliseconds
+                    : 0.0;
+                return WaveProgressBar(
+                  progress: progress.clamp(0.0, 1.0),
+                  height: 24,
+                  backgroundColor: Colors.grey.shade800,
+                  waveColor: Theme.of(context).colorScheme.primary,
+                  waveColor2: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: 12,
+                  amplitude: 8,
+                  speed: 1.0,
+                  frequency: 1.0,
+                );
+              },
+            ),
             if (isPlayerReady) ...[
-              Container(
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                ),
-                child: Stack(
-                  children: [
-                    // Progress indicator (unchanged)
-                    FractionallySizedBox(
-                      widthFactor: duration.inMilliseconds > 0 
-                          ? position.inMilliseconds / duration.inMilliseconds 
-                          : 0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                        ),
-                      ),
-                    ),
-                    // Wave effect at the bottom
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(AppTheme.borderRadiusMedium),
-                          bottomRight: Radius.circular(AppTheme.borderRadiusMedium),
-                        ),
-                        child: SizedBox(
-                          height: 40,
-                          width: double.infinity,
-                          child: WaveWidget(
-                            config: CustomConfig(
-                              gradients: [
-                                [Theme.of(context).colorScheme.primary.withOpacity(0.7), Theme.of(context).colorScheme.primary.withOpacity(0.3)],
-                                [Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5), Theme.of(context).colorScheme.primaryContainer.withOpacity(0.2)],
-                              ],
-                              durations: [18000, 8000],
-                              heightPercentages: [0.22, 0.25],
-                              blur: MaskFilter.blur(BlurStyle.solid, 2),
-                              gradientBegin: Alignment.centerLeft,
-                              gradientEnd: Alignment.centerRight,
-                            ),
-                            waveAmplitude: 10,
-                            backgroundColor: Colors.transparent,
-                            size: const Size(double.infinity, 40),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: 8),
               SliderTheme(
                 data: SliderThemeData(
@@ -236,32 +201,160 @@ class AudioControls extends StatelessWidget {
                   ),
                 ],
               ),
-            ] else ...[
-              Center(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    Icon(
-                      Icons.audio_file_rounded,
-                      size: 48,
-                      color: AppTheme.errorColor.withOpacity(0.5),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Audio file not available',
-                      style: TextStyle(
-                        color: AppTheme.errorColor,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
             ],
           ],
         ),
       ),
     );
+  }
+}
+
+class WaveProgressBar extends StatefulWidget {
+  final double progress;
+  final double height;
+  final Color backgroundColor;
+  final Color waveColor;
+  final Color waveColor2;
+  final double borderRadius;
+  final double amplitude;
+  final double speed;
+  final double frequency;
+
+  const WaveProgressBar({
+    super.key,
+    required this.progress,
+    this.height = 24,
+    required this.backgroundColor,
+    required this.waveColor,
+    required this.waveColor2,
+    this.borderRadius = 12,
+    this.amplitude = 8,
+    this.speed = 1.0,
+    this.frequency = 1.0,
+  });
+
+  @override
+  State<WaveProgressBar> createState() => _WaveProgressBarState();
+}
+
+class _WaveProgressBarState extends State<WaveProgressBar> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2))
+      ..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: _WaveProgressPainter(
+            progress: widget.progress,
+            backgroundColor: widget.backgroundColor,
+            waveColor: widget.waveColor,
+            waveColor2: widget.waveColor2,
+            borderRadius: widget.borderRadius,
+            amplitude: widget.amplitude,
+            phase: _controller.value * 2 * math.pi * widget.speed,
+            frequency: widget.frequency,
+          ),
+          size: Size(double.infinity, widget.height),
+        );
+      },
+    );
+  }
+}
+
+class _WaveProgressPainter extends CustomPainter {
+  final double progress;
+  final Color backgroundColor;
+  final Color waveColor;
+  final Color waveColor2;
+  final double borderRadius;
+  final double amplitude;
+  final double phase;
+  final double frequency;
+
+  _WaveProgressPainter({
+    required this.progress,
+    required this.backgroundColor,
+    required this.waveColor,
+    required this.waveColor2,
+    required this.borderRadius,
+    required this.amplitude,
+    required this.phase,
+    required this.frequency,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bgRect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(borderRadius),
+    );
+    // Draw background
+    final bgPaint = Paint()..color = backgroundColor;
+    canvas.drawRRect(bgRect, bgPaint);
+
+    // Draw wave progress
+    final progressWidth = size.width * progress.clamp(0.0, 1.0);
+    if (progressWidth <= 0) return;
+    final waveRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, progressWidth, size.height),
+      Radius.circular(borderRadius),
+    );
+    canvas.save();
+    canvas.clipRRect(waveRect);
+
+    // Draw first wave
+    final wavePaint = Paint()
+      ..color = waveColor.withOpacity(0.7)
+      ..style = PaintingStyle.fill;
+    final path = Path();
+    path.moveTo(0, size.height);
+    for (double x = 0; x <= progressWidth; x++) {
+      double y = size.height / 2 + amplitude * math.sin(frequency * (x / progressWidth) * 2 * math.pi + phase);
+      path.lineTo(x, y);
+    }
+    path.lineTo(progressWidth, size.height);
+    path.close();
+    canvas.drawPath(path, wavePaint);
+
+    // Draw second wave (symmetrical, phase offset by pi)
+    final wavePaint2 = Paint()
+      ..color = waveColor2.withOpacity(0.5)
+      ..style = PaintingStyle.fill;
+    final path2 = Path();
+    path2.moveTo(0, size.height);
+    for (double x = 0; x <= progressWidth; x++) {
+      double y = size.height / 2 + amplitude * math.sin(frequency * (x / progressWidth) * 2 * math.pi + phase + math.pi);
+      path2.lineTo(x, y);
+    }
+    path2.lineTo(progressWidth, size.height);
+    path2.close();
+    canvas.drawPath(path2, wavePaint2);
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _WaveProgressPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.waveColor != waveColor ||
+        oldDelegate.waveColor2 != waveColor2 ||
+        oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.phase != phase ||
+        oldDelegate.frequency != frequency;
   }
 }
