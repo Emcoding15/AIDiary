@@ -107,6 +107,7 @@ class AudioControls extends StatelessWidget {
                   amplitude: 8,
                   speed: 1.0,
                   frequency: 1.0,
+                  isPlaying: isPlaying,
                 );
               },
             ),
@@ -219,6 +220,7 @@ class WaveProgressBar extends StatefulWidget {
   final double amplitude;
   final double speed;
   final double frequency;
+  final bool isPlaying;
 
   const WaveProgressBar({
     super.key,
@@ -231,6 +233,7 @@ class WaveProgressBar extends StatefulWidget {
     this.amplitude = 8,
     this.speed = 1.0,
     this.frequency = 1.0,
+    required this.isPlaying,
   });
 
   @override
@@ -245,6 +248,19 @@ class _WaveProgressBarState extends State<WaveProgressBar> with SingleTickerProv
     super.initState();
     _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2))
       ..repeat();
+    if (!widget.isPlaying) {
+      _controller.stop();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant WaveProgressBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isPlaying && !_controller.isAnimating) {
+      _controller.repeat();
+    } else if (!widget.isPlaying && _controller.isAnimating) {
+      _controller.stop();
+    }
   }
 
   @override
