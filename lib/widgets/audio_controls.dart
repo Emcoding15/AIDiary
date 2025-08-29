@@ -100,7 +100,7 @@ class AudioControls extends StatelessWidget {
                 return WaveProgressBar(
                   progress: progress.clamp(0.0, 1.0),
                   height: 24,
-                  backgroundColor: Colors.grey.shade800,
+                  backgroundColor: const Color(0xFF3DDAD7).withOpacity(0.18), // teal with reduced opacity
                   waveColor: Theme.of(context).colorScheme.primary,
                   waveColor2: Theme.of(context).colorScheme.primaryContainer,
                   borderRadius: 12,
