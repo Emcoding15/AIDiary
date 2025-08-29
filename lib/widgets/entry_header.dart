@@ -21,11 +21,13 @@ class EntryHeader extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Theme.of(context).colorScheme.primary,
-                Theme.of(context).colorScheme.primaryContainer,
+                Color(0xFF26C6DA), // Slightly darker aqua (top)
+                Color(0xFF13BBAF), // Rich aqua (middle)
+                Color(0xFF11998e), // Deep aqua/teal (bottom)
               ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              stops: [0.0, 0.6, 1.0],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
             borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
             boxShadow: AppTheme.lightShadow,
@@ -36,8 +38,15 @@ class EntryHeader extends StatelessWidget {
               Text(
                 entry.title,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
+                  color: Colors.white, // soft light gray
                   fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withOpacity(0.32), // darker shadow
+                      blurRadius: 6,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 8),
@@ -46,28 +55,28 @@ class EntryHeader extends StatelessWidget {
                   Icon(
                     Icons.calendar_today_rounded,
                     size: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withOpacity(0.7),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     formattedDate,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withOpacity(0.7), // Slightly less bright
                     ),
                   ),
                   const SizedBox(width: 16),
                   Icon(
                     Icons.access_time_rounded,
                     size: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withOpacity(0.7),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     formattedTime,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withOpacity(0.7), // Slightly less bright
                     ),
                   ),
                 ],
