@@ -1,3 +1,4 @@
+import '../widgets/summary_section.dart';
 import '../widgets/transcription_section.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -347,7 +348,12 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                 const SizedBox(height: 24),
                 
                 // Summary section
-                _buildSummarySection(),
+                SummarySection(
+                  summary: _summary,
+                  isGeneratingSummary: _isGeneratingSummary,
+                  hasTranscription: _transcription != null && _transcription!.isNotEmpty,
+                  onGenerateSummary: _transcribeAndSummarize,
+                ),
                 
                 const SizedBox(height: 32),
                 
@@ -367,131 +373,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
   
 
   
-  Widget _buildSummarySection() {
-    final hasTranscription = _transcription != null && _transcription!.isNotEmpty;
-    
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.summarize_rounded,
-                  color: Color(0xFF4EE0BD),
-                  size: 22,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Summary',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                    color: Colors.white,
-                  ),
-                ),
-                const Spacer(),
-                if (hasTranscription && (_summary == null || _summary!.isEmpty))
-                  ElevatedButton.icon(
-                    onPressed: _isGeneratingSummary ? null : _transcribeAndSummarize,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      textStyle: const TextStyle(fontSize: 14),
-                    ),
-                    icon: _isGeneratingSummary
-                        ? Container(
-                            width: 14,
-                            height: 14,
-                            margin: const EdgeInsets.only(right: 8),
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : const Icon(Icons.auto_awesome_rounded, size: 16),
-                    label: Text(_isGeneratingSummary ? 'Processing...' : 'Generate'),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Container(height: 2, color: Color(0xFF232B3A)),
-            const SizedBox(height: 16),
-            if (_summary != null && _summary!.isNotEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                  border: Border.all(
-                    color: Theme.of(context).dividerColor,
-                  ),
-                ),
-                child: Text(
-                  _summary!,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  textAlign: TextAlign.justify,
-                ),
-              )
-            else if (_isGeneratingSummary)
-              Center(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    const CircularProgressIndicator(),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Generating summary...',
-                      style: TextStyle(color: AppTheme.textSecondary),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'This may take a minute',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                ),
-              )
-            else
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                  border: Border.all(
-                    color: Theme.of(context).dividerColor,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    hasTranscription
-                        ? 'Generate a summary from the transcription'
-                        : 'Transcription required for summary generation',
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildSuggestionsSection() {
     // Remove debug print for production
