@@ -110,9 +110,16 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
         });
 
         // Listen to player state changes
-        _audioPlayer.playerStateStream.listen((state) {
+        _audioPlayer.playerStateStream.listen((state) async {
           if (!mounted) return;
-          if (state.playing != _isPlaying) {
+          if (state.processingState == ProcessingState.completed) {
+            await _audioPlayer.pause(); // Ensure player is paused
+            await _audioPlayer.seek(Duration.zero);
+            setState(() {
+              _isPlaying = false;
+              _position = Duration.zero;
+            });
+          } else if (state.playing != _isPlaying) {
             setState(() {
               _isPlaying = state.playing;
             });
@@ -379,45 +386,3 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
 
 }
 
-class WaveformPainter extends CustomPainter {
-  final Color color;
-  
-  WaveformPainter({required this.color});
-  
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-    
-    final width = size.width;
-    final height = size.height;
-    final centerY = height / 2;
-    
-    final path = Path();
-    
-    // Create a simple static waveform pattern
-    final segmentWidth = width / 40;
-    path.moveTo(0, centerY);
-    
-    for (int i = 0; i < 40; i++) {
-      final x = i * segmentWidth;
-      final amplitude = (i % 3 == 0) ? 0.7 : (i % 2 == 0 ? 0.4 : 0.2);
-      final y = centerY - (height * 0.3 * amplitude);
-      
-      path.lineTo(x, y);
-      path.lineTo(x + segmentWidth * 0.5, centerY);
-      path.lineTo(x + segmentWidth, centerY + (height * 0.3 * amplitude * 0.7));
-      path.lineTo(x + segmentWidth * 1.5, centerY);
-    }
-    
-    canvas.drawPath(path, paint);
-  }
-  
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
-  }
-}

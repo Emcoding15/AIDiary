@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:wave/wave.dart';
+import 'package:wave/config.dart';
 
 class AudioControls extends StatelessWidget {
   final bool isPlayerReady;
@@ -97,6 +99,7 @@ class AudioControls extends StatelessWidget {
                 ),
                 child: Stack(
                   children: [
+                    // Progress indicator (unchanged)
                     FractionallySizedBox(
                       widthFactor: duration.inMilliseconds > 0 
                           ? position.inMilliseconds / duration.inMilliseconds 
@@ -108,8 +111,37 @@ class AudioControls extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Center(
-                      child: Text('Waveform'), // Placeholder for waveform
+                    // Wave effect at the bottom
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(AppTheme.borderRadiusMedium),
+                          bottomRight: Radius.circular(AppTheme.borderRadiusMedium),
+                        ),
+                        child: SizedBox(
+                          height: 40,
+                          width: double.infinity,
+                          child: WaveWidget(
+                            config: CustomConfig(
+                              gradients: [
+                                [Theme.of(context).colorScheme.primary.withOpacity(0.7), Theme.of(context).colorScheme.primary.withOpacity(0.3)],
+                                [Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5), Theme.of(context).colorScheme.primaryContainer.withOpacity(0.2)],
+                              ],
+                              durations: [18000, 8000],
+                              heightPercentages: [0.22, 0.25],
+                              blur: MaskFilter.blur(BlurStyle.solid, 2),
+                              gradientBegin: Alignment.centerLeft,
+                              gradientEnd: Alignment.centerRight,
+                            ),
+                            waveAmplitude: 10,
+                            backgroundColor: Colors.transparent,
+                            size: const Size(double.infinity, 40),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
