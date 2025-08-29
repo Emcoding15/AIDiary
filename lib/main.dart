@@ -82,8 +82,6 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
       vsync: this,
       duration: AppTheme.mediumAnimationDuration,
     );
-    
-    // Initialize animation to completed state when app first loads
     _animationController.value = 1.0;
   }
   
@@ -95,11 +93,9 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
 
   void _onItemTapped(int index) {
     if (_selectedIndex == index) return;
-    
     setState(() {
       _selectedIndex = index;
     });
-    
     _animationController.reset();
     _animationController.forward();
   }
@@ -192,20 +188,14 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
-      FadeTransition(
-        opacity: _animationController,
-        child: HomeScreen(
-          key: _homeKey,
-          onEntryTap: (entry) => _navigateToEntryDetailsScreen(context, entry),
-          onEntryAdded: _addJournalEntry,
-        ),
+      HomeScreen(
+        key: _homeKey,
+        onEntryTap: (entry) => _navigateToEntryDetailsScreen(context, entry),
+        onEntryAdded: _addJournalEntry,
       ),
-      FadeTransition(
-        opacity: _animationController,
-        child: CalendarScreen(
-          key: _calendarKey,
-          onEntryTap: (entry) => _navigateToEntryDetailsScreen(context, entry),
-        ),
+      CalendarScreen(
+        key: _calendarKey,
+        onEntryTap: (entry) => _navigateToEntryDetailsScreen(context, entry),
       ),
     ];
 
@@ -234,7 +224,10 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
           ),
         ],
       ),
-      body: screens[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: screens,
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: AppTheme.lightShadow,
