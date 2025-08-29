@@ -12,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'screens/auth_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/favorite_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -210,8 +211,18 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
 
     return Scaffold(
       appBar: AppBar(
-  title: const Text('AI Diary'),
+        title: const Text('AI Diary'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.star_rounded),
+            color: Colors.amber,
+            tooltip: 'Show favorite entries',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const FavoriteScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: 'Settings',

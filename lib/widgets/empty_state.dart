@@ -4,7 +4,8 @@ import '../models/journal_entry.dart';
 import '../screens/record_screen.dart';
 
 class EmptyState extends StatelessWidget {
-  const EmptyState({Key? key}) : super(key: key);
+  final String? message;
+  const EmptyState({Key? key, this.message}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +20,7 @@ class EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'No journal entries yet',
+            message ?? 'No journal entries yet',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               color: AppTheme.textSecondary,
             ),
