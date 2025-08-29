@@ -169,9 +169,27 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                   Text(
                     'Your Journal',
                     style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w900,
                       fontSize: 36,
-                      letterSpacing: -0.5,
+                      letterSpacing: 0.5,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Color(0xFF11998e).withOpacity(0.6), // Teal echo
+                          blurRadius: 0,
+                          offset: Offset(3, 3),
+                        ),
+                        Shadow(
+                          color: Colors.black.withOpacity(0.25),
+                          blurRadius: 4,
+                          offset: Offset(4, 4),
+                        ),
+                        Shadow(
+                          color: Colors.black.withOpacity(0.10),
+                          blurRadius: 8,
+                          offset: Offset(8, 8),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 20),
