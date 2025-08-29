@@ -8,7 +8,10 @@ import '../config/theme.dart';
 
 import 'record_screen.dart';
 import 'entry_details_screen.dart';
+
 import '../widgets/journal_entry_card.dart';
+import '../widgets/stats_card.dart';
+import '../widgets/empty_state.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(JournalEntry entry)? onEntryTap;
@@ -108,7 +111,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
       );
     }
     if (_entries.isEmpty) {
-      return _buildEmptyState(context);
+      return const EmptyState();
     }
 
     // Group entries by date
@@ -124,6 +127,14 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
     // Sort dates (newest first)
     final sortedDates = entriesByDate.keys.toList()
       ..sort((a, b) => b.compareTo(a));
+
+    final entriesThisWeek = _entries.where((entry) {
+      final now = DateTime.now();
+      final weekStart = DateTime(now.year, now.month, now.day - now.weekday + 1);
+      return entry.date.isAfter(weekStart);
+    }).length;
+    final totalSeconds = _entries.fold<int>(0, (sum, entry) => sum + (entry.duration));
+    final totalMinutes = (totalSeconds / 60).ceil();
 
     return Scaffold(
       floatingActionButton: Container(
@@ -222,7 +233,12 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                     ),
                   ),
                   const SizedBox(height: 20),
-                  if (_entries.isNotEmpty) _buildStatsCard(context),
+                  if (_entries.isNotEmpty)
+                    StatsCard(
+                      totalEntries: _entries.length,
+                      entriesThisWeek: entriesThisWeek,
+                      totalMinutes: totalMinutes,
+                    ),
                 ],
               ),
             ),
@@ -263,258 +279,25 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.mic_none_rounded,
-            size: 80,
-            color: AppTheme.textSecondary.withOpacity(0.5),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'No journal entries yet',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: AppTheme.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tap the mic button to record your first entry',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) => RecordScreen(),
-                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                    const begin = Offset(0.0, 1.0);
-                    const end = Offset.zero;
-                    const curve = Curves.easeInOutCubic;
-                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                    var offsetAnimation = animation.drive(tween);
-                    return SlideTransition(
-                      position: offsetAnimation,
-                      child: child,
-                    );
-                  },
-                  transitionDuration: AppTheme.mediumAnimationDuration,
-                ),
-              );
-              // Auto-refresh entries if a new entry was added
-              if (result != null && result is JournalEntry) {
-                await loadEntries();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Journal entry saved successfully!'),
-                      backgroundColor: AppTheme.successGreen,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                      ),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
-              }
-            },
-            icon: const Icon(Icons.mic_rounded),
-            label: const Text('Start Recording'),
-          ),
-        ],
-      ),
-    );
-  }
   
-  Widget _buildStatsCard(BuildContext context) {
-    final entriesThisWeek = _entries.where((entry) {
-      final now = DateTime.now();
-      final weekStart = DateTime(now.year, now.month, now.day - now.weekday + 1);
-      return entry.date.isAfter(weekStart);
-    }).length;
-
-    final totalSeconds = _entries.fold<int>(0, (sum, entry) => sum + (entry.duration ?? 0));
-    final totalMinutes = (totalSeconds / 60).ceil();
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 24,
-            offset: Offset(0, 8),
-          ),
-        ],
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF38F9D7), // Aqua (top)
-            Color(0xFF1DE9B6), // Bright teal (middle)
-            Color(0xFF13BBAF), // Subtle medium teal (bottom)
-          ],
-          stops: [0.0, 0.7, 1.0],
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-        child: Stack(
-          children: [
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                  margin: const EdgeInsets.only(top: 32), // lower the wave
-                  height: 185,
-                width: double.infinity,
-                child: WaveWidget(
-                  config: CustomConfig(
-                    gradients: [
-                      [
-                        Color(0xFF38F9D7), // Aqua
-                        Color(0xFF1DE9B6), // Bright teal
-                        Color(0xFF13BBAF), // Medium teal
-                      ],
-                      [
-                        Color(0xFF13BBAF), // Medium teal
-                        Color(0xFF1DE9B6), // Bright teal
-                        Color(0xFF38F9D7), // Aqua
-                      ],
-                    ],
-                    durations: [4500, 19440],
-                    heightPercentages: [0.22, 0.25],
-                    blur: MaskFilter.blur(BlurStyle.solid, 2),
-                    gradientBegin: Alignment.centerLeft,
-                    gradientEnd: Alignment.centerRight,
-                  ),
-                  waveAmplitude: 3,
-                  backgroundColor: Colors.transparent,
-                  size: const Size(double.infinity, double.infinity),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Your Progress',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Color(0xFF1A2B2E),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      _buildStatItem(
-                        context,
-                        '${_entries.length}',
-                        'Total\nEntries',
-                        Icons.list_alt_rounded,
-                      ),
-                      const SizedBox(width: 24),
-                      _buildStatItem(
-                        context,
-                        '$entriesThisWeek',
-                        'Entries\nThis Week',
-                        Icons.calendar_today_rounded,
-                      ),
-                      const SizedBox(width: 24),
-                      _buildStatItem(
-                        context,
-                        '$totalMinutes',
-                        'Total\nMinutes',
-                        Icons.access_time_rounded,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildStatItem(
-    BuildContext context,
-    String value,
-    String label,
-    IconData icon,
-  ) {
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            color: Color(0xFF1A2B2E),
-            size: 28,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A2B2E),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-                  color: Color(0xFF1A2B2E),
-              height: 1.2,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
   
   Widget _buildEntryCard(BuildContext context, JournalEntry entry) {
     return JournalEntryCard(
       entry: entry,
-      onTap: () async {
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => EntryDetailsScreen(entry: entry),
-          ),
-        );
-        if (result == true) {
-          await loadEntries();
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Journal entry deleted.'),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                ),
-                duration: const Duration(seconds: 2),
+      onDeleted: () async {
+        await loadEntries();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Journal entry deleted.'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
               ),
-            );
-          }
+              duration: const Duration(seconds: 2),
+            ),
+          );
         }
       },
     );
