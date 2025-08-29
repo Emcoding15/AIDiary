@@ -8,12 +8,14 @@ class JournalEntryCard extends StatelessWidget {
   final JournalEntry entry;
   final VoidCallback? onDeleted;
   final VoidCallback? onTap;
+  final void Function(bool isFavorite)? onFavoriteToggle;
 
   const JournalEntryCard({
     Key? key,
     required this.entry,
     this.onDeleted,
     this.onTap,
+    this.onFavoriteToggle,
   }) : super(key: key);
 
   @override
@@ -94,11 +96,30 @@ class JournalEntryCard extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  entry.title,
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        entry.title,
+                                        style: Theme.of(context).textTheme.titleLarge,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(
+                                        entry.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
+                                        color: entry.isFavorite ? Colors.amber : AppTheme.textSecondary,
+                                        size: 30, // increased size
+                                      ),
+                                      tooltip: entry.isFavorite ? 'Unfavorite' : 'Favorite',
+                                      onPressed: () {
+                                        if (onFavoriteToggle != null) {
+                                          onFavoriteToggle!(!entry.isFavorite);
+                                        }
+                                      },
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 4),
                                 Row(

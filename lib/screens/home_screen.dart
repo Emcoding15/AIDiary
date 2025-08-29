@@ -260,6 +260,21 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
           );
         }
       },
+      onFavoriteToggle: (isFavorite) async {
+        final updatedEntry = JournalEntry(
+          id: entry.id,
+          title: entry.title,
+          date: entry.date,
+          audioPath: entry.audioPath,
+          transcription: entry.transcription,
+          summary: entry.summary,
+          suggestions: entry.suggestions,
+          duration: entry.duration,
+          isFavorite: isFavorite,
+        );
+        await FirebaseService().saveJournalEntry(updatedEntry);
+        await loadEntries();
+      },
     );
   }
   
