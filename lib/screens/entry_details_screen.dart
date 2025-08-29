@@ -3,6 +3,7 @@ import 'dart:io';
 import '../models/journal_entry.dart';
 import '../services/ai_service.dart';
 import 'package:just_audio/just_audio.dart';
+import '../widgets/audio_controls.dart';
 import '../config/theme.dart';
 import 'package:intl/intl.dart';
 import '../services/firebase_service.dart';
@@ -181,219 +182,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
     super.dispose();
   }
 
-  // Audio playback controls section for the build method
-  Widget _buildAudioControls() {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.headphones_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Audio Recording',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                    color: Colors.white,
-                  ),
-                ),
-                const Spacer(),
-                if (_fileSize != null)
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.storage_rounded,
-                        size: 14,
-                        color: AppTheme.textSecondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatFileSize(_fileSize!),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (_isPlayerReady) ...[
-              // Waveform visualization placeholder
-              Container(
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                ),
-                child: Stack(
-                  children: [
-                    // Progress indicator
-                    FractionallySizedBox(
-                      widthFactor: _duration.inMilliseconds > 0 
-                          ? _position.inMilliseconds / _duration.inMilliseconds 
-                          : 0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                        ),
-                      ),
-                    ),
-                    // Waveform pattern (static for now)
-                    Center(
-                      child: CustomPaint(
-                        size: const Size(double.infinity, 40),
-                        painter: WaveformPainter(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              const SizedBox(height: 8),
-              
-              // Slider for seeking
-              SliderTheme(
-                data: SliderThemeData(
-                  trackHeight: 4,
-                  activeTrackColor: Theme.of(context).colorScheme.primary,
-                  inactiveTrackColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  thumbColor: Theme.of(context).colorScheme.primary,
-                  overlayColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-                ),
-                child: Slider(
-                  value: _position.inSeconds.toDouble(),
-                  min: 0,
-                  max: _duration.inSeconds.toDouble(),
-                  onChanged: (value) {
-                    final position = Duration(seconds: value.toInt());
-                    _audioPlayer.seek(position);
-                  },
-                ),
-              ),
-              
-              // Position and duration display
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _formatDuration(_position),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                    Text(
-                      _formatDuration(_duration),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // Control buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Rewind button
-                  IconButton(
-                    icon: const Icon(Icons.replay_10_rounded),
-                    onPressed: () {
-                      final newPosition = _position - const Duration(seconds: 10);
-                      _audioPlayer.seek(newPosition < Duration.zero ? Duration.zero : newPosition);
-                    },
-                    iconSize: 36,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 24),
-                  // Play/pause button
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Theme.of(context).colorScheme.primary,
-                      boxShadow: AppTheme.lightShadow,
-                    ),
-                    child: IconButton(
-                      icon: AnimatedSwitcher(
-                        duration: AppTheme.shortAnimationDuration,
-                        child: Icon(
-                          _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                          key: ValueKey<bool>(_isPlaying),
-                          color: Colors.white,
-                        ),
-                      ),
-                      onPressed: _playPause,
-                      iconSize: 36,
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  // Forward button
-                  IconButton(
-                    icon: const Icon(Icons.forward_10_rounded),
-                    onPressed: () {
-                      final newPosition = _position + const Duration(seconds: 10);
-                      _audioPlayer.seek(newPosition > _duration ? _duration : newPosition);
-                    },
-                    iconSize: 36,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ],
-              ),
-            ] else ...[
-              Center(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    Icon(
-                      Icons.audio_file_rounded,
-                      size: 48,
-                      color: AppTheme.errorColor.withOpacity(0.5),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Audio file not available',
-                      style: TextStyle(
-                        color: AppTheme.errorColor,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Future<void> _transcribeAndSummarize() async {
   final audioPath = widget.entry.audioPath;
@@ -534,7 +323,15 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                 const SizedBox(height: 24),
                 
                 // Audio player section
-                _buildAudioControls(),
+                AudioControls(
+                  isPlayerReady: _isPlayerReady,
+                  isPlaying: _isPlaying,
+                  duration: _duration,
+                  position: _position,
+                  fileSize: _fileSize,
+                  onPlayPause: _playPause,
+                  audioPlayer: _audioPlayer,
+                ),
                 
                 const SizedBox(height: 24),
                 
