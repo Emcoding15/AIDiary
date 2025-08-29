@@ -1,3 +1,4 @@
+import '../widgets/suggestions_section.dart';
 import '../widgets/summary_section.dart';
 import '../widgets/transcription_section.dart';
 import 'package:flutter/material.dart';
@@ -358,7 +359,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                 const SizedBox(height: 32),
                 
                 // Suggestions section
-                _buildSuggestionsSection(),
+                SuggestionsSection(suggestions: _suggestions),
                 // Bottom padding
                 const SizedBox(height: 40),
               ],
@@ -375,77 +376,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
   
 
 
-  Widget _buildSuggestionsSection() {
-    // Remove debug print for production
-    if (_suggestions == null || _suggestions!.trim().isEmpty) {
-      return const SizedBox.shrink();
-    }
-    // Split suggestions into lines
-    List<String> lines = _suggestions!.split('\n').where((l) => l.trim().isNotEmpty).toList();
-    // If only one line, try splitting by ' - '
-    if (lines.length <= 1 && _suggestions!.contains(' - ')) {
-      lines = _suggestions!
-          .split(' - ')
-          .map((l) => l.trim())
-          .where((l) => l.isNotEmpty)
-          .toList();
-    }
-    // Clean up each line: remove leading dashes or bullets
-    lines = lines.map((l) {
-      String cleaned = l.trim();
-      if (cleaned.startsWith('-')) cleaned = cleaned.substring(1).trim();
-      if (cleaned.startsWith('•')) cleaned = cleaned.substring(1).trim();
-      return cleaned;
-    }).toList();
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.tips_and_updates_rounded, color: Color(0xFF4EE0BD), size: 22),
-                const SizedBox(width: 8),
-                Text('Suggestions', style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 20,
-                  color: Colors.white,
-                )),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Container(height: 2, color: Color(0xFF232B3A)),
-            const SizedBox(height: 16),
-            ...lines.map((line) => Padding(
-              padding: const EdgeInsets.only(bottom: 10.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('•', style: TextStyle(fontSize: 28, height: 1.1, color: Color(0xFF4EE0BD))),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      line,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        height: 1.5,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.justify,
-                    ),
-                  ),
-                ],
-              ),
-            )),
-          ],
-        ),
-      ),
-    );
-  }
+
 }
 
 class WaveformPainter extends CustomPainter {
