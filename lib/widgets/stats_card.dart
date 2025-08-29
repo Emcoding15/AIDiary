@@ -24,9 +24,16 @@ class StatsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 24,
-            offset: Offset(0, 8),
+            color: Colors.black.withOpacity(0.42), // much stronger shadow
+            blurRadius: 48,
+            offset: Offset(0, 24),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.18), // extra soft shadow
+            blurRadius: 12,
+            offset: Offset(0, 2),
+            spreadRadius: 0,
           ),
         ],
         gradient: LinearGradient(
