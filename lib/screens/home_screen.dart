@@ -12,6 +12,7 @@ import 'entry_details_screen.dart';
 import '../widgets/journal_entry_card.dart';
 import '../widgets/stats_card.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/record_entry_fab.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(JournalEntry entry)? onEntryTap;
@@ -137,73 +138,14 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
     final totalMinutes = (totalSeconds / 60).ceil();
 
     return Scaffold(
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          boxShadow: AppTheme.lightShadow,
-          borderRadius: BorderRadius.circular(32),
-        ),
-        child: FloatingActionButton(
-          heroTag: 'home_fab',
-          onPressed: () async {
-            final result = await Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => RecordScreen(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(0.0, 1.0);
-                  const end = Offset.zero;
-                  const curve = Curves.easeInOutCubic;
-                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                  var offsetAnimation = animation.drive(tween);
-                  return SlideTransition(
-                    position: offsetAnimation,
-                    child: child,
-                  );
-                },
-                transitionDuration: AppTheme.mediumAnimationDuration,
-              ),
-            );
-            // Auto-refresh entries if a new entry was added or deleted
-            if (result != null && result is JournalEntry) {
-              await loadEntries();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Journal entry saved successfully!'),
-                    backgroundColor: AppTheme.successGreen,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                    ),
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              }
-            } else if (result == true) {
-              // Entry was deleted
-              await loadEntries();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Journal entry deleted.'),
-                    backgroundColor: Colors.red,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                    ),
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              }
-            }
-          },
-          elevation: 0,
-          child: Icon(
-            Icons.mic_rounded,
-            color: Color(0xFF1A2B2E),
-            size: 24,
-          ),
-        ),
+      floatingActionButton: RecordEntryFAB(
+        parentContext: context,
+        onEntryAdded: (entry) async {
+          await loadEntries();
+        },
+        onEntryDeleted: () async {
+          await loadEntries();
+        },
       ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
