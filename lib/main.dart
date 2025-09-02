@@ -160,6 +160,7 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
 
   // Navigate to the entry details screen
   Future<void> _navigateToEntryDetailsScreen(BuildContext context, JournalEntry entry) async {
+    debugPrint('🧭 Main: Navigating to EntryDetailsScreen for entry ${entry.id}');
     final result = await Navigator.push(
       context,
       PageRouteBuilder(
@@ -184,9 +185,13 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
       ),
     );
     
+    debugPrint('🔙 Main: Returned from EntryDetailsScreen with result: $result');
     // If result is true, reload the home screen entries
     if (result == true) {
+      debugPrint('🔄 Main: Result is true, triggering HomeScreen reload...');
       _homeKey.currentState?.loadEntries();
+    } else {
+      debugPrint('ℹ️ Main: Result is not true, no reload needed');
     }
   }
 

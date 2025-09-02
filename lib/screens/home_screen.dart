@@ -72,17 +72,21 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
   }
 
   Future<void> loadEntries() async {
+    debugPrint('🔄 HomeScreen: Starting to load entries from Firestore');
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final entries = await FirebaseService().loadJournalEntries();
+      debugPrint('✅ HomeScreen: Successfully loaded ${entries.length} entries from Firestore');
       setState(() {
         _entries = entries;
         _loading = false;
       });
+      debugPrint('🔄 HomeScreen: UI updated with ${entries.length} entries');
     } catch (e) {
+      debugPrint('❌ HomeScreen: Failed to load entries: $e');
       setState(() {
         _error = 'Failed to load entries.';
         _loading = false;
@@ -244,8 +248,12 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
   Widget _buildEntryCard(BuildContext context, JournalEntry entry) {
     return JournalEntryCard(
       entry: entry,
-      onTap: widget.onEntryTap != null ? () => widget.onEntryTap!(entry) : null,
+      onTap: widget.onEntryTap != null ? () {
+        debugPrint('👆 HomeScreen: Entry tapped - ${entry.title} (${entry.id})');
+        widget.onEntryTap!(entry);
+      } : null,
       onDeleted: () async {
+        debugPrint('🗑️ HomeScreen: Entry deleted callback triggered for ${entry.id}');
         await loadEntries();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -262,6 +270,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
         }
       },
       onFavoriteToggle: (isFavorite) async {
+        debugPrint('⭐ HomeScreen: Favorite toggle triggered for ${entry.id} - isFavorite: $isFavorite');
         final updatedEntry = JournalEntry(
           id: entry.id,
           title: entry.title,
@@ -273,8 +282,14 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
           duration: entry.duration,
           isFavorite: isFavorite,
         );
-        await FirebaseService().saveJournalEntry(updatedEntry);
-        await loadEntries();
+        try {
+          debugPrint('💾 HomeScreen: Saving favorite status to Firestore...');
+          await FirebaseService().saveJournalEntry(updatedEntry);
+          debugPrint('✅ HomeScreen: Favorite status saved, reloading entries...');
+          await loadEntries();
+        } catch (e) {
+          debugPrint('❌ HomeScreen: Failed to save favorite status: $e');
+        }
       },
     );
   }

@@ -309,11 +309,18 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
               );
               if (confirm == true) {
                 try {
+                  debugPrint('🗑️ EntryDetailsScreen: Starting deletion for entry ${widget.entry.id}');
                   await FirebaseService().deleteJournalEntry(widget.entry.id);
+                  debugPrint('✅ EntryDetailsScreen: Entry deleted successfully from Firestore');
+                  
                   if (mounted) {
+                    debugPrint('🔙 EntryDetailsScreen: Popping with result=true after deletion');
                     Navigator.of(context).pop(true); // Optionally pass true to indicate deletion
+                  } else {
+                    debugPrint('⚠️ EntryDetailsScreen: Widget not mounted, cannot pop after deletion');
                   }
                 } catch (e) {
+                  debugPrint('❌ EntryDetailsScreen: Failed to delete entry: $e');
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Failed to delete entry: $e'),
@@ -377,6 +384,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                     });
                   },
                   onSave: () async {
+                    debugPrint('🔄 EntryDetailsScreen: Starting notes save for entry ${widget.entry.id}');
                     setState(() {
                       _isSavingNotes = true;
                     });
@@ -392,7 +400,10 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                       notes: _notesController.text,
                     );
                     try {
+                      debugPrint('💾 EntryDetailsScreen: Saving notes to Firestore...');
                       await FirebaseService().saveJournalEntry(updatedEntry);
+                      debugPrint('✅ EntryDetailsScreen: Notes saved successfully to Firestore');
+                      
                       widget.onEntryUpdated?.call(updatedEntry);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -402,9 +413,13 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                       );
                       // Pop with true to indicate changes were made
                       if (mounted) {
+                        debugPrint('🔙 EntryDetailsScreen: Popping with result=true after notes save');
                         Navigator.of(context).pop(true);
+                      } else {
+                        debugPrint('⚠️ EntryDetailsScreen: Widget not mounted, cannot pop');
                       }
                     } catch (e) {
+                      debugPrint('❌ EntryDetailsScreen: Failed to save notes: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Failed to save notes: $e'),
@@ -412,6 +427,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                         ),
                       );
                     } finally {
+                      debugPrint('🏁 EntryDetailsScreen: Notes save operation completed');
                       setState(() {
                         _isSavingNotes = false;
                       });
