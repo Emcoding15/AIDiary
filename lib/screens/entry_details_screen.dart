@@ -11,6 +11,7 @@ import '../config/theme.dart';
 import 'package:intl/intl.dart';
 import '../services/firebase_service.dart';
 import '../widgets/entry_header.dart';
+import '../widgets/notes_section.dart';
 
 class EntryDetailsScreen extends StatefulWidget {
   final JournalEntry entry;
@@ -40,6 +41,9 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
   String? _transcription;
   String? _summary;
   String? _suggestions;
+  String? _notes;
+  final TextEditingController _notesController = TextEditingController();
+  bool _isSavingNotes = false;
   
   // Animation controller for content transitions
   late AnimationController _animationController;
@@ -53,6 +57,8 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
     _transcription = widget.entry.transcription;
     _summary = widget.entry.summary;
     _suggestions = widget.entry.suggestions;
+  _notes = widget.entry.notes;
+  _notesController.text = _notes ?? '';
     
     // Initialize animations
     _animationController = AnimationController(
@@ -188,9 +194,10 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
-    _animationController.dispose();
-    super.dispose();
+  _audioPlayer.dispose();
+  _animationController.dispose();
+  _notesController.dispose();
+  super.dispose();
   }
 
 
@@ -330,9 +337,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
               children: [
                 // Entry header
                 EntryHeader(entry: widget.entry),
-                
                 const SizedBox(height: 24),
-                
                 // Audio player section
                 AudioControls(
                   isPlayerReady: _isPlayerReady,
@@ -343,18 +348,14 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                   onPlayPause: _playPause,
                   audioPlayer: _audioPlayer,
                 ),
-                
                 const SizedBox(height: 24),
-                
                 // Transcription section
                 TranscriptionSection(
                   transcription: _transcription,
                   isTranscribing: _isTranscribing,
                   onTranscribe: _transcribeAndSummarize,
                 ),
-                
                 const SizedBox(height: 24),
-                
                 // Summary section
                 SummarySection(
                   summary: _summary,
@@ -362,12 +363,57 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                   hasTranscription: _transcription != null && _transcription!.isNotEmpty,
                   onGenerateSummary: _transcribeAndSummarize,
                 ),
-                
                 const SizedBox(height: 32),
-                
                 // Suggestions section
                 SuggestionsSection(suggestions: _suggestions),
-                // Bottom padding
+                const SizedBox(height: 32),
+                // Notes section (modularized)
+                NotesSection(
+                  notesController: _notesController,
+                  isSaving: _isSavingNotes,
+                  onChanged: (value) {
+                    setState(() {
+                      _notes = value;
+                    });
+                  },
+                  onSave: () async {
+                    setState(() {
+                      _isSavingNotes = true;
+                    });
+                    final updatedEntry = JournalEntry(
+                      id: widget.entry.id,
+                      title: widget.entry.title,
+                      date: widget.entry.date,
+                      audioPath: widget.entry.audioPath,
+                      transcription: _transcription,
+                      summary: _summary,
+                      suggestions: _suggestions,
+                      duration: widget.entry.duration,
+                      notes: _notesController.text,
+                    );
+                    try {
+                      await FirebaseService().saveJournalEntry(updatedEntry);
+                      widget.onEntryUpdated?.call(updatedEntry);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Notes saved successfully'),
+                          backgroundColor: AppTheme.successGreen,
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to save notes: $e'),
+                          backgroundColor: AppTheme.errorColor,
+                        ),
+                      );
+                    } finally {
+                      setState(() {
+                        _isSavingNotes = false;
+                      });
+                    }
+                  },
+                ),
                 const SizedBox(height: 40),
               ],
             ),

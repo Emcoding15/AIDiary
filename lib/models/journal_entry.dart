@@ -6,6 +6,7 @@ class JournalEntry {
   final String? transcription;
   final String? summary;
   final String? suggestions;
+  final String? notes; // user notes
   final int duration; // duration in seconds
   final bool isFavorite;
 
@@ -13,12 +14,13 @@ class JournalEntry {
     required this.id,
     required this.title,
     required this.date,
-    this.audioPath,
-    this.transcription,
-    this.summary,
-    this.suggestions,
-    required this.duration,
-    this.isFavorite = false,
+  this.audioPath,
+  this.transcription,
+  this.summary,
+  this.suggestions,
+  this.notes,
+  required this.duration,
+  this.isFavorite = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -32,6 +34,7 @@ class JournalEntry {
       'suggestions': suggestions,
       'duration': duration,
       'isFavorite': isFavorite,
+      'notes': notes,
     };
   }
 
@@ -46,6 +49,7 @@ class JournalEntry {
       suggestions: map['suggestions'] as String?,
       duration: map['duration'] is int ? map['duration'] as int : int.tryParse(map['duration'].toString()) ?? 0,
       isFavorite: map['isFavorite'] == true,
+      notes: map['notes'] as String?,
     );
   }
 }
