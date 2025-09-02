@@ -90,10 +90,7 @@ class _SearchScreenState extends State<SearchScreen> {
         _isLoading = false;
       });
 
-      // Add to recent searches if it's a text query
-      if (searchQuery.isNotEmpty) {
-        _addToRecentSearches(searchQuery);
-      }
+  // Do not add to recent searches here; only add on submit
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -197,7 +194,12 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
               onChanged: (value) => _performSearch(),
-              onSubmitted: _performSearch,
+              onSubmitted: (value) {
+                _performSearch(value);
+                if (value.trim().isNotEmpty) {
+                  _addToRecentSearches(value.trim());
+                }
+              },
             ),
           ),
 
