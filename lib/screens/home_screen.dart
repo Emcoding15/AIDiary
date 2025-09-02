@@ -37,12 +37,21 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
 
   List<JournalEntry> _entries = [];
   bool _loading = true;
+  bool _isLoadingInProgress = false; // Add guard to prevent concurrent loads
+  bool _hasLoadedOnce = false; // Track if we've loaded data before
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    loadEntries();
+    debugPrint('🏠 HomeScreen: initState() called');
+    // Load data immediately for the home screen since it's the default screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_hasLoadedOnce) {
+        debugPrint('🏠 HomeScreen: Loading data after first frame');
+        loadEntries();
+      }
+    });
 
     _gradientController = AnimationController(
       vsync: this,
@@ -72,7 +81,15 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
   }
 
   Future<void> loadEntries() async {
+    // Prevent concurrent loading
+    if (_isLoadingInProgress) {
+      debugPrint('⏸️ HomeScreen: Load already in progress, skipping duplicate call');
+      return;
+    }
+    
     debugPrint('🔄 HomeScreen: Starting to load entries from Firestore');
+    _isLoadingInProgress = true;
+    _hasLoadedOnce = true; // Mark that we've loaded at least once
     setState(() {
       _loading = true;
       _error = null;
@@ -91,6 +108,9 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
         _error = 'Failed to load entries.';
         _loading = false;
       });
+    } finally {
+      _isLoadingInProgress = false;
+      debugPrint('🏁 HomeScreen: Load operation completed');
     }
   }
 

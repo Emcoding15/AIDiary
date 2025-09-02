@@ -93,11 +93,18 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
 
   void _onItemTapped(int index) {
     if (_selectedIndex == index) return;
+    debugPrint('📱 Main: Tab switched from $_selectedIndex to $index');
     setState(() {
       _selectedIndex = index;
     });
     _animationController.reset();
     _animationController.forward();
+    
+    // Load data for calendar screen when it's first accessed
+    if (index == 1) {
+      debugPrint('📅 Main: Calendar tab selected, triggering load if needed');
+      _calendarKey.currentState?.loadEntriesIfNeeded();
+    }
   }
   
 

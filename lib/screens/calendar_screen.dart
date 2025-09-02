@@ -29,31 +29,56 @@ class CalendarScreenState extends State<CalendarScreen> {
   List<JournalEntry> _entries = [];
   Map<DateTime, List<JournalEntry>> _entriesByDay = {};
   bool _loading = true;
+  bool _isLoadingInProgress = false; // Add guard to prevent concurrent loads
+  bool _hasLoadedOnce = false; // Track if we've loaded data before
   String? _error;
 
   @override
   void initState() {
     super.initState();
-      loadEntries();
+    debugPrint('📅 CalendarScreen: initState() called');
+    // Don't load data automatically - only when tab is selected
   }
 
-    Future<void> loadEntries() async {
-  setState(() {
+  void loadEntriesIfNeeded() {
+    if (!_hasLoadedOnce) {
+      debugPrint('📅 CalendarScreen: Loading data for first time');
+      loadEntries();
+    }
+  }
+
+  Future<void> loadEntries() async {
+    // Prevent concurrent loading
+    if (_isLoadingInProgress) {
+      debugPrint('⏸️ CalendarScreen: Load already in progress, skipping duplicate call');
+      return;
+    }
+    
+    debugPrint('🔄 CalendarScreen: Starting to load entries from Firestore');
+    _isLoadingInProgress = true;
+    _hasLoadedOnce = true; // Mark that we've loaded at least once
+    setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final entries = await FirebaseService().loadJournalEntries();
+      debugPrint('✅ CalendarScreen: Successfully loaded ${entries.length} entries from Firestore');
       setState(() {
         _entries = entries;
         _initEntriesByDay();
         _loading = false;
       });
+      debugPrint('🔄 CalendarScreen: UI updated with ${entries.length} entries');
     } catch (e) {
+      debugPrint('❌ CalendarScreen: Failed to load entries: $e');
       setState(() {
         _error = 'Failed to load entries.';
         _loading = false;
       });
+    } finally {
+      _isLoadingInProgress = false;
+      debugPrint('🏁 CalendarScreen: Load operation completed');
     }
   }
 
