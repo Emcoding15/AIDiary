@@ -21,6 +21,7 @@ class EntryCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
+      color: Theme.of(context).colorScheme.surface, // keep card bg dark
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -37,6 +38,7 @@ class EntryCard extends StatelessWidget {
                       entry.title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -63,7 +65,7 @@ class EntryCard extends StatelessWidget {
                   Text(
                     DateFormat('MMM dd, yyyy • HH:mm').format(entry.date),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: Colors.white70,
                     ),
                   ),
                   const Spacer(),
@@ -76,7 +78,7 @@ class EntryCard extends StatelessWidget {
                   Text(
                     _formatDuration(entry.duration),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: Colors.white70,
                     ),
                   ),
                 ],
@@ -88,14 +90,16 @@ class EntryCard extends StatelessWidget {
               if (entry.summary?.isNotEmpty == true) ...[
                 _buildHighlightedText(
                   entry.summary!,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                  ),
                   maxLines: 3,
                 ),
               ] else if (entry.transcription?.isNotEmpty == true) ...[
                 _buildHighlightedText(
                   entry.transcription!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: Colors.white,
                   ),
                   maxLines: 3,
                 ),

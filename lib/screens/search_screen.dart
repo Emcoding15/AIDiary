@@ -301,10 +301,10 @@ class _SearchScreenState extends State<SearchScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (_recentSearches.isNotEmpty) ...[
-            Text(
-              'Recent Searches',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+              Text(
+                'Recent Searches',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white),
+              ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -324,7 +324,7 @@ class _SearchScreenState extends State<SearchScreen> {
           if (_suggestions.isNotEmpty) ...[
             Text(
               'Suggestions',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white),
             ),
             const SizedBox(height: 8),
             Wrap(
