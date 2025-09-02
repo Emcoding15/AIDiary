@@ -60,7 +60,7 @@ dev_dependencies:
   flutter_native_splash: ^2.4.0
 # Splash screen configuration for flutter_native_splash
 flutter_native_splash:
-  color: "#ffffff"
+  background_image: assets/splash_bg_gradient.png
   image: assets/aid_logo.png
   android: true
   ios: true
@@ -69,7 +69,6 @@ flutter_native_splash:
   ios_content_mode: center
   android_12:
     image: assets/aid_logo.png
-    color: "#ffffff"
     icon_background_color: "#ffffff"
 
 flutter_icons:
