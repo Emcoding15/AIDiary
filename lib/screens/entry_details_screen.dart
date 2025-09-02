@@ -56,10 +56,14 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
   // Animation controller for content transitions
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  
+  // Current entry state
+  late JournalEntry _currentEntry;
 
   @override
   void initState() {
     super.initState();
+    _currentEntry = widget.entry;
     _initAudioPlayer();
     _loadFileSize();
     _transcription = widget.entry.transcription;
@@ -81,6 +85,12 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
     );
     
     _animationController.forward();
+  }
+
+  void _onEntryUpdated(JournalEntry updatedEntry) {
+    setState(() {
+      _currentEntry = updatedEntry;
+    });
   }
 
   Future<void> _loadFileSize() async {
@@ -458,7 +468,10 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Entry header
-                EntryHeader(entry: widget.entry),
+                EntryHeader(
+                  entry: _currentEntry,
+                  onEntryUpdated: _onEntryUpdated,
+                ),
                 const SizedBox(height: 24),
                 // Audio player section
                 AudioControls(
