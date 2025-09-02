@@ -258,10 +258,23 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
             icon: const Icon(Icons.star_rounded),
             color: Colors.amber,
             tooltip: 'Show favorite entries',
-            onPressed: () {
-              Navigator.of(context).push(
+            onPressed: () async {
+              debugPrint('⭐ Main: Navigating to FavoriteScreen');
+              final result = await Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const FavoriteScreen()),
               );
+              
+              // If changes were made in FavoriteScreen, reload current screen
+              if (result == true) {
+                debugPrint('🔄 Main: Returned from FavoriteScreen with changes, reloading current screen');
+                if (_selectedIndex == 0 && _homeKey.currentState?.hasLoadedOnce == true) {
+                  debugPrint('🔄 Main: Reloading HomeScreen after FavoriteScreen changes');
+                  _homeKey.currentState?.loadEntries();
+                } else if (_selectedIndex == 1 && _calendarKey.currentState?.hasLoadedOnce == true) {
+                  debugPrint('🔄 Main: Reloading CalendarScreen after FavoriteScreen changes');
+                  _calendarKey.currentState?.loadEntries();
+                }
+              }
             },
           ),
           IconButton(

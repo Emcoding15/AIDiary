@@ -3,6 +3,8 @@ import '../models/journal_entry.dart';
 import '../services/firebase_service.dart';
 import '../widgets/journal_entry_card.dart';
 import '../widgets/empty_state.dart';
+import 'entry_details_screen.dart';
+import '../config/theme.dart';
 
 class FavoriteScreen extends StatefulWidget {
   const FavoriteScreen({Key? key}) : super(key: key);
@@ -15,6 +17,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
   List<JournalEntry> _favorites = [];
   bool _loading = true;
   String? _error;
+  bool _hasChanges = false; // Track if changes were made
 
   @override
   void initState() {
@@ -41,6 +44,47 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
     }
   }
 
+  // Navigate to the entry details screen
+  Future<void> _navigateToEntryDetailsScreen(BuildContext context, JournalEntry entry) async {
+    debugPrint('🧭 FavoriteScreen: Navigating to EntryDetailsScreen for entry ${entry.id}');
+    final result = await Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => EntryDetailsScreen(
+          entry: entry,
+          onEntryUpdated: (updatedEntry) {
+            debugPrint('📝 FavoriteScreen: Entry updated callback received');
+          },
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutCubic;
+          
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var offsetAnimation = animation.drive(tween);
+          
+          return SlideTransition(
+            position: offsetAnimation,
+            child: child,
+          );
+        },
+        transitionDuration: AppTheme.mediumAnimationDuration,
+      ),
+    );
+    
+    debugPrint('🔙 FavoriteScreen: Returned from EntryDetailsScreen with result: $result');
+    // If result is true, reload favorites and notify parent of changes
+    if (result == true) {
+      debugPrint('🔄 FavoriteScreen: Result is true, reloading favorites...');
+      await _loadFavorites();
+      // Mark that changes were made so parent can reload too
+      _hasChanges = true;
+    } else {
+      debugPrint('ℹ️ FavoriteScreen: Result is not true, no reload needed');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -59,6 +103,13 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Favorite Entries'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            debugPrint('🔙 FavoriteScreen: Manual back pressed, hasChanges: $_hasChanges');
+            Navigator.of(context).pop(_hasChanges);
+          },
+        ),
       ),
       body: ListView.builder(
         itemCount: _favorites.length,
@@ -66,7 +117,9 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
           final entry = _favorites[index];
           return JournalEntryCard(
             entry: entry,
+            onTap: () => _navigateToEntryDetailsScreen(context, entry),
             onFavoriteToggle: (isFavorite) async {
+              debugPrint('⭐ FavoriteScreen: Favorite toggle triggered for ${entry.id} - isFavorite: $isFavorite');
               final updatedEntry = JournalEntry(
                 id: entry.id,
                 title: entry.title,
@@ -79,8 +132,15 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                 notes: entry.notes,
                 isFavorite: isFavorite,
               );
-              await FirebaseService().saveJournalEntry(updatedEntry);
-              await _loadFavorites();
+              try {
+                debugPrint('💾 FavoriteScreen: Saving favorite status to Firestore...');
+                await FirebaseService().saveJournalEntry(updatedEntry);
+                debugPrint('✅ FavoriteScreen: Favorite status saved, reloading favorites...');
+                await _loadFavorites();
+                _hasChanges = true; // Mark that changes were made
+              } catch (e) {
+                debugPrint('❌ FavoriteScreen: Failed to save favorite status: $e');
+              }
             },
           );
         },
