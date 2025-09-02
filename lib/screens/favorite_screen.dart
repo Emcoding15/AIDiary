@@ -76,6 +76,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                 summary: entry.summary,
                 suggestions: entry.suggestions,
                 duration: entry.duration,
+                notes: entry.notes,
                 isFavorite: isFavorite,
               );
               await FirebaseService().saveJournalEntry(updatedEntry);

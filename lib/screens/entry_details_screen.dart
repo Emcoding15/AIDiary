@@ -2,6 +2,7 @@ import '../widgets/suggestions_section.dart';
 import '../widgets/summary_section.dart';
 import '../widgets/transcription_section.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'dart:io';
 import '../models/journal_entry.dart';
 import '../services/ai_service.dart';
@@ -45,6 +46,12 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
   final TextEditingController _notesController = TextEditingController();
   bool _isSavingNotes = false;
   
+  // Auto-save functionality
+  Timer? _autoSaveTimer;
+  String _lastSavedNotes = '';
+  bool _hasUnsavedChanges = false;
+  bool _hasAutoSaved = false; // Track if auto-save has occurred
+  
   // Animation controller for content transitions
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -57,8 +64,9 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
     _transcription = widget.entry.transcription;
     _summary = widget.entry.summary;
     _suggestions = widget.entry.suggestions;
-  _notes = widget.entry.notes;
-  _notesController.text = _notes ?? '';
+    _notes = widget.entry.notes;
+    _notesController.text = _notes ?? '';
+    _lastSavedNotes = _notes ?? ''; // Initialize last saved state
     
     // Initialize animations
     _animationController = AnimationController(
@@ -192,11 +200,102 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
     }
   }
 
+  // Auto-save functionality
+  void _scheduleAutoSave() {
+    _autoSaveTimer?.cancel(); // Cancel any existing timer
+    
+    // Only schedule auto-save if there are actual changes
+    if (_notesController.text != _lastSavedNotes) {
+      setState(() {
+        _hasUnsavedChanges = true;
+      });
+      
+      _autoSaveTimer = Timer(const Duration(seconds: 2), () {
+        if (_notesController.text != _lastSavedNotes && !_isSavingNotes) {
+          _autoSaveNotes();
+        }
+      });
+    } else {
+      setState(() {
+        _hasUnsavedChanges = false;
+      });
+    }
+  }
+
+  Future<void> _autoSaveNotes() async {
+    if (_isSavingNotes) return; // Prevent concurrent saves
+    
+    debugPrint('🔄 EntryDetailsScreen: Auto-saving notes for entry ${widget.entry.id}');
+    setState(() {
+      _isSavingNotes = true;
+    });
+    
+    final updatedEntry = JournalEntry(
+      id: widget.entry.id,
+      title: widget.entry.title,
+      date: widget.entry.date,
+      audioPath: widget.entry.audioPath,
+      transcription: _transcription,
+      summary: _summary,
+      suggestions: _suggestions,
+      duration: widget.entry.duration,
+      notes: _notesController.text,
+    );
+    
+    try {
+      debugPrint('💾 EntryDetailsScreen: Auto-saving notes to Firestore...');
+      await FirebaseService().saveJournalEntry(updatedEntry);
+      debugPrint('✅ EntryDetailsScreen: Notes auto-saved successfully to Firestore');
+      
+      _lastSavedNotes = _notesController.text;
+      _hasAutoSaved = true; // Mark that auto-save has occurred
+      
+      // Update local state to reflect the saved data
+      setState(() {
+        _notes = _notesController.text;
+        _hasUnsavedChanges = false;
+      });
+      
+      widget.onEntryUpdated?.call(updatedEntry);
+      
+      // Show subtle feedback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Notes saved automatically'),
+            backgroundColor: AppTheme.successGreen.withOpacity(0.8),
+            duration: const Duration(milliseconds: 800), // Shorter duration
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ EntryDetailsScreen: Failed to auto-save notes: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to auto-save notes: $e'),
+            backgroundColor: AppTheme.errorColor,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isSavingNotes = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
   _audioPlayer.dispose();
   _animationController.dispose();
   _notesController.dispose();
+  _autoSaveTimer?.cancel(); // Cancel auto-save timer
   super.dispose();
   }
 
@@ -285,6 +384,14 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
       appBar: AppBar(
         title: Text(widget.entry.title),
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Return true if auto-save has occurred to trigger parent reload
+            debugPrint('🔙 EntryDetailsScreen: Manual back pressed, hasAutoSaved: $_hasAutoSaved');
+            Navigator.of(context).pop(_hasAutoSaved);
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline),
@@ -378,10 +485,12 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                 NotesSection(
                   notesController: _notesController,
                   isSaving: _isSavingNotes,
+                  hasUnsavedChanges: _hasUnsavedChanges,
                   onChanged: (value) {
                     setState(() {
                       _notes = value;
                     });
+                    _scheduleAutoSave(); // Trigger auto-save
                   },
                   onSave: () async {
                     debugPrint('🔄 EntryDetailsScreen: Starting notes save for entry ${widget.entry.id}');
@@ -411,13 +520,8 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                           backgroundColor: AppTheme.successGreen,
                         ),
                       );
-                      // Pop with true to indicate changes were made
-                      if (mounted) {
-                        debugPrint('🔙 EntryDetailsScreen: Popping with result=true after notes save');
-                        Navigator.of(context).pop(true);
-                      } else {
-                        debugPrint('⚠️ EntryDetailsScreen: Widget not mounted, cannot pop');
-                      }
+                      // Don't pop - let user stay on screen with auto-save
+                      debugPrint('✅ EntryDetailsScreen: Manual save completed, staying on screen');
                     } catch (e) {
                       debugPrint('❌ EntryDetailsScreen: Failed to save notes: $e');
                       ScaffoldMessenger.of(context).showSnackBar(
