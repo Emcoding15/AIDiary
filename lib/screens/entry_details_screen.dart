@@ -400,6 +400,10 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                           backgroundColor: AppTheme.successGreen,
                         ),
                       );
+                      // Pop with true to indicate changes were made
+                      if (mounted) {
+                        Navigator.of(context).pop(true);
+                      }
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

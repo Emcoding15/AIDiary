@@ -244,6 +244,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
   Widget _buildEntryCard(BuildContext context, JournalEntry entry) {
     return JournalEntryCard(
       entry: entry,
+      onTap: widget.onEntryTap != null ? () => widget.onEntryTap!(entry) : null,
       onDeleted: () async {
         await loadEntries();
         if (context.mounted) {

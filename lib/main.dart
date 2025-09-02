@@ -160,7 +160,7 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
 
   // Navigate to the entry details screen
   Future<void> _navigateToEntryDetailsScreen(BuildContext context, JournalEntry entry) async {
-    await Navigator.push(
+    final result = await Navigator.push(
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => EntryDetailsScreen(
@@ -183,6 +183,11 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
         transitionDuration: AppTheme.mediumAnimationDuration,
       ),
     );
+    
+    // If result is true, reload the home screen entries
+    if (result == true) {
+      _homeKey.currentState?.loadEntries();
+    }
   }
 
   @override
