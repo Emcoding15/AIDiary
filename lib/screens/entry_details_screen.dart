@@ -240,6 +240,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
       suggestions: _suggestions,
       duration: widget.entry.duration,
       notes: _notesController.text,
+      isFavorite: widget.entry.isFavorite, // Preserve favorite status
     );
     
     try {
@@ -507,6 +508,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                       suggestions: _suggestions,
                       duration: widget.entry.duration,
                       notes: _notesController.text,
+                      isFavorite: widget.entry.isFavorite, // Preserve favorite status
                     );
                     try {
                       debugPrint('💾 EntryDetailsScreen: Saving notes to Firestore...');

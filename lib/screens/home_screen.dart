@@ -294,6 +294,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
           summary: entry.summary,
           suggestions: entry.suggestions,
           duration: entry.duration,
+          notes: entry.notes, // Preserve notes
           isFavorite: isFavorite,
         );
         try {
