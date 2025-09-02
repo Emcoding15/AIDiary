@@ -142,15 +142,6 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
     final totalMinutes = (totalSeconds / 60).ceil();
 
     return Scaffold(
-      floatingActionButton: RecordEntryFAB(
-        parentContext: context,
-        onEntryAdded: (entry) async {
-          await loadEntries();
-        },
-        onEntryDeleted: () async {
-          await loadEntries();
-        },
-      ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [

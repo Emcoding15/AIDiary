@@ -109,6 +109,7 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
 
   // Navigate to the record screen
   Future<void> _navigateToRecordScreen(BuildContext context) async {
+    debugPrint('🎤 Main: Navigating to RecordScreen');
     final result = await Navigator.push(
       context,
       PageRouteBuilder(
@@ -130,14 +131,18 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
       ),
     );
 
+    debugPrint('🔙 Main: Returned from RecordScreen with result: ${result != null ? "JournalEntry" : "null"}');
     // Handle the returned journal entry
     if (result != null && result is JournalEntry) {
+      debugPrint('📝 Main: Adding new journal entry to list');
       _addJournalEntry(result);
 
       // Refresh the correct screen after saving
       if (_selectedIndex == 0) {
+        debugPrint('🔄 Main: Refreshing HomeScreen after new entry');
         _homeKey.currentState?.loadEntries();
       } else if (_selectedIndex == 1) {
+        debugPrint('🔄 Main: Refreshing CalendarScreen after new entry');
         _calendarKey.currentState?.loadEntries();
       }
 
