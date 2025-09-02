@@ -127,36 +127,39 @@ class _EntryHeaderState extends State<EntryHeader> {
               // Title section with edit functionality
               _isEditingTitle ? _buildEditingTitle() : _buildDisplayTitle(),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.calendar_today_rounded,
-                    size: 14,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    formattedDate,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.7), // Slightly less bright
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      size: 14,
+                      color: Colors.white.withOpacity(0.7),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(
-                    Icons.access_time_rounded,
-                    size: 14,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    formattedTime,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.7), // Slightly less bright
+                    const SizedBox(width: 6),
+                    Text(
+                      formattedDate,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.7), // Slightly less bright
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 16),
+                    Icon(
+                      Icons.access_time_rounded,
+                      size: 14,
+                      color: Colors.white.withOpacity(0.7),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      formattedTime,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.7), // Slightly less bright
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
