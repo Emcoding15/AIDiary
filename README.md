@@ -5,6 +5,25 @@
 
 AI Diary revolutionizes personal journaling by eliminating the friction of typing. Simply speak your thoughts, and our advanced AI pipeline handles the rest—recording, transcribing, summarizing, and organizing your entries with intelligent titles and insights.
 
+## 🌍 Multi-Language Transcription Support
+
+AI Diary leverages Google Gemini 2.5 Pro to transcribe and analyze voice entries in multiple languages. The following languages are officially supported for transcription:
+
+- **English**
+- **Spanish**
+- **French**
+- **German**
+- **Italian**
+- **Portuguese**
+- **Dutch**
+- **Russian**
+- **Chinese (Simplified and Traditional)**
+- **Japanese**
+- **Korean**
+- **Hindi**
+
+You can record your diary entries in any of these languages, and the app will automatically transcribe and summarize your speech.
+
 ## ✨ Features
 
 ### 🎤 **Voice-First Experience**
