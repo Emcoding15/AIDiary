@@ -41,6 +41,9 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
   bool _hasLoadedOnce = false; // Track if we've loaded data before
   String? _error;
 
+  // Public getter to check if screen has loaded data before
+  bool get hasLoadedOnce => _hasLoadedOnce;
+
   @override
   void initState() {
     super.initState();

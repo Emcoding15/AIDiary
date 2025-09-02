@@ -144,13 +144,25 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
       debugPrint('📝 Main: Adding new journal entry to list');
       _addJournalEntry(result);
 
-      // Refresh the correct screen after saving
+      // Refresh the currently visible screen
       if (_selectedIndex == 0) {
-        debugPrint('🔄 Main: Refreshing HomeScreen after new entry');
+        debugPrint('🔄 Main: Refreshing HomeScreen after new entry (currently visible)');
         _homeKey.currentState?.loadEntries();
+        
+        // Also refresh CalendarScreen if it has been loaded before
+        if (_calendarKey.currentState?.hasLoadedOnce == true) {
+          debugPrint('🔄 Main: Also refreshing CalendarScreen to keep in sync');
+          _calendarKey.currentState?.loadEntries();
+        }
       } else if (_selectedIndex == 1) {
-        debugPrint('🔄 Main: Refreshing CalendarScreen after new entry');
+        debugPrint('🔄 Main: Refreshing CalendarScreen after new entry (currently visible)');
         _calendarKey.currentState?.loadEntries();
+        
+        // Also refresh HomeScreen if it has been loaded before
+        if (_homeKey.currentState?.hasLoadedOnce == true) {
+          debugPrint('🔄 Main: Also refreshing HomeScreen to keep in sync');
+          _homeKey.currentState?.loadEntries();
+        }
       }
 
       // Show a confirmation message
@@ -198,10 +210,27 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
     );
     
     debugPrint('🔙 Main: Returned from EntryDetailsScreen with result: $result');
-    // If result is true, reload the home screen entries
+    // If result is true, reload the appropriate screen(s)
     if (result == true) {
-      debugPrint('🔄 Main: Result is true, triggering HomeScreen reload...');
-      _homeKey.currentState?.loadEntries();
+      debugPrint('🔄 Main: Result is true, triggering screen reload...');
+      
+      // Always reload the currently visible screen
+      if (_selectedIndex == 0) {
+        debugPrint('🔄 Main: Reloading HomeScreen (currently visible)');
+        _homeKey.currentState?.loadEntries();
+      } else if (_selectedIndex == 1) {
+        debugPrint('🔄 Main: Reloading CalendarScreen (currently visible)');
+        _calendarKey.currentState?.loadEntries();
+      }
+      
+      // Also reload the other screen if it has been loaded before (to keep data in sync)
+      if (_selectedIndex == 0 && _calendarKey.currentState?.hasLoadedOnce == true) {
+        debugPrint('🔄 Main: Also reloading CalendarScreen to keep in sync');
+        _calendarKey.currentState?.loadEntries();
+      } else if (_selectedIndex == 1 && _homeKey.currentState?.hasLoadedOnce == true) {
+        debugPrint('🔄 Main: Also reloading HomeScreen to keep in sync');
+        _homeKey.currentState?.loadEntries();
+      }
     } else {
       debugPrint('ℹ️ Main: Result is not true, no reload needed');
     }
