@@ -39,11 +39,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
   List<JournalEntry> _entries = [];
   bool _loading = true;
   bool _isLoadingInProgress = false; // Add guard to prevent concurrent loads
-  bool _hasLoadedOnce = false; // Track if we've loaded data before
   String? _error;
-
-  // Public getter to check if screen has loaded data before
-  bool get hasLoadedOnce => _hasLoadedOnce;
 
   @override
   void initState() {
@@ -51,10 +47,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
     debugPrint('🏠 HomeScreen: initState() called');
     // Load data immediately for the home screen since it's the default screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_hasLoadedOnce) {
-        debugPrint('🏠 HomeScreen: Loading data after first frame');
-        loadEntries();
-      }
+      loadEntries();
     });
 
     _gradientController = AnimationController(
@@ -100,7 +93,6 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
     
     debugPrint('🔄 HomeScreen: Starting to load entries from Firestore');
     _isLoadingInProgress = true;
-    _hasLoadedOnce = true; // Mark that we've loaded at least once
     setState(() {
       _loading = true;
       _error = null;
@@ -276,7 +268,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
       } : null,
       onDeleted: () async {
         debugPrint('🗑️ HomeScreen: Entry deleted callback triggered for ${entry.id}');
-        await loadEntries();
+        // Refresh handled by global refresh manager in EntryDetailsScreen
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

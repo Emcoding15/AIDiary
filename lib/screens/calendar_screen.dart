@@ -29,17 +29,16 @@ class CalendarScreenState extends State<CalendarScreen> with RefreshableScreen {
   Map<DateTime, List<JournalEntry>> _entriesByDay = {};
   bool _loading = true;
   bool _isLoadingInProgress = false; // Add guard to prevent concurrent loads
-  bool _hasLoadedOnce = false; // Track if we've loaded data before
   String? _error;
-
-  // Public getter to check if screen has loaded data before
-  bool get hasLoadedOnce => _hasLoadedOnce;
 
   @override
   void initState() {
     super.initState();
     debugPrint('📅 CalendarScreen: initState() called');
-    // Don't load data automatically - only when tab is selected
+    // Load data immediately when calendar screen is created
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      loadEntries();
+    });
   }
 
   // Implement the RefreshableScreen mixin method
@@ -47,13 +46,6 @@ class CalendarScreenState extends State<CalendarScreen> with RefreshableScreen {
   void onRefresh() {
     debugPrint('🔄 CalendarScreen: Global refresh triggered');
     loadEntries();
-  }
-
-  void loadEntriesIfNeeded() {
-    if (!_hasLoadedOnce) {
-      debugPrint('📅 CalendarScreen: Loading data for first time');
-      loadEntries();
-    }
   }
 
   Future<void> loadEntries() async {
@@ -65,7 +57,6 @@ class CalendarScreenState extends State<CalendarScreen> with RefreshableScreen {
     
     debugPrint('🔄 CalendarScreen: Starting to load entries from Firestore');
     _isLoadingInProgress = true;
-    _hasLoadedOnce = true; // Mark that we've loaded at least once
     setState(() {
       _loading = true;
       _error = null;
@@ -321,23 +312,7 @@ class CalendarScreenState extends State<CalendarScreen> with RefreshableScreen {
               transitionDuration: AppTheme.mediumAnimationDuration,
             ),
           );
-          // Auto-refresh entries if a new entry was added
-          if (result != null && result is JournalEntry) {
-            await loadEntries();
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Journal entry saved successfully!'),
-                  backgroundColor: AppTheme.successGreen,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            }
-          }
+          // New entry refresh is handled by global refresh manager in main.dart
         },
         elevation: 4,
         child: const Icon(Icons.mic_rounded),

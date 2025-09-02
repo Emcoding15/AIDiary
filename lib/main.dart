@@ -79,10 +79,6 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
   int _selectedIndex = 0;
   late AnimationController _animationController;
 
-  // GlobalKeys for HomeScreen and CalendarScreen
-  final GlobalKey<HomeScreenState> _homeKey = GlobalKey<HomeScreenState>();
-  final GlobalKey<CalendarScreenState> _calendarKey = GlobalKey<CalendarScreenState>();
-
   @override
   void initState() {
     super.initState();
@@ -107,12 +103,6 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
     });
     _animationController.reset();
     _animationController.forward();
-    
-    // Load data for calendar screen when it's first accessed
-    if (index == 1) {
-      debugPrint('📅 Main: Calendar tab selected, triggering load if needed');
-      _calendarKey.currentState?.loadEntriesIfNeeded();
-    }
   }
   
 
@@ -214,12 +204,10 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     final List<Widget> screens = [
       HomeScreen(
-        key: _homeKey,
         onEntryTap: (entry) => _navigateToEntryDetailsScreen(context, entry),
         onEntryAdded: _addJournalEntry,
       ),
       CalendarScreen(
-        key: _calendarKey,
         onEntryTap: (entry) => _navigateToEntryDetailsScreen(context, entry),
       ),
     ];
