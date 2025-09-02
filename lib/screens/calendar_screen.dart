@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../models/journal_entry.dart';
-
-
 import '../services/firebase_service.dart';
+import '../services/refresh_manager.dart';
 import 'record_screen.dart';
 import '../config/theme.dart';
 
@@ -21,7 +20,7 @@ class CalendarScreen extends StatefulWidget {
 }
 
 
-class CalendarScreenState extends State<CalendarScreen> {
+class CalendarScreenState extends State<CalendarScreen> with RefreshableScreen {
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
   CalendarFormat _calendarFormat = CalendarFormat.month;
@@ -41,6 +40,13 @@ class CalendarScreenState extends State<CalendarScreen> {
     super.initState();
     debugPrint('📅 CalendarScreen: initState() called');
     // Don't load data automatically - only when tab is selected
+  }
+
+  // Implement the RefreshableScreen mixin method
+  @override
+  void onRefresh() {
+    debugPrint('🔄 CalendarScreen: Global refresh triggered');
+    loadEntries();
   }
 
   void loadEntriesIfNeeded() {

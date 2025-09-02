@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:io';
 import '../models/journal_entry.dart';
 import '../services/ai_service.dart';
+import '../services/refresh_manager.dart';
 import 'package:just_audio/just_audio.dart';
 import '../widgets/audio_controls.dart';
 import '../config/theme.dart';
@@ -259,6 +260,9 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
       
       widget.onEntryUpdated?.call(updatedEntry);
       
+      // Refresh all screens after saving notes
+      RefreshManager.refreshAfterNotesUpdate();
+      
       // Show subtle feedback
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -420,6 +424,9 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                   debugPrint('🗑️ EntryDetailsScreen: Starting deletion for entry ${widget.entry.id}');
                   await FirebaseService().deleteJournalEntry(widget.entry.id);
                   debugPrint('✅ EntryDetailsScreen: Entry deleted successfully from Firestore');
+                  
+                  // Refresh all screens after deletion
+                  RefreshManager.refreshAfterDelete();
                   
                   if (mounted) {
                     debugPrint('🔙 EntryDetailsScreen: Popping with result=true after deletion');

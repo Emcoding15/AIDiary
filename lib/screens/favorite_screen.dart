@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/journal_entry.dart';
 import '../services/firebase_service.dart';
+import '../services/refresh_manager.dart';
 import '../widgets/journal_entry_card.dart';
 import '../widgets/empty_state.dart';
 import 'entry_details_screen.dart';
@@ -13,7 +14,7 @@ class FavoriteScreen extends StatefulWidget {
   State<FavoriteScreen> createState() => _FavoriteScreenState();
 }
 
-class _FavoriteScreenState extends State<FavoriteScreen> {
+class _FavoriteScreenState extends State<FavoriteScreen> with RefreshableScreen {
   List<JournalEntry> _favorites = [];
   bool _loading = true;
   String? _error;
@@ -22,6 +23,13 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
   @override
   void initState() {
     super.initState();
+    _loadFavorites();
+  }
+
+  // Implement the RefreshableScreen mixin method
+  @override
+  void onRefresh() {
+    debugPrint('🔄 FavoriteScreen: Global refresh triggered');
     _loadFavorites();
   }
 
@@ -135,8 +143,8 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
               try {
                 debugPrint('💾 FavoriteScreen: Saving favorite status to Firestore...');
                 await FirebaseService().saveJournalEntry(updatedEntry);
-                debugPrint('✅ FavoriteScreen: Favorite status saved, reloading favorites...');
-                await _loadFavorites();
+                debugPrint('✅ FavoriteScreen: Favorite status saved, refreshing all screens...');
+                RefreshManager.refreshAfterFavoriteToggle();
                 _hasChanges = true; // Mark that changes were made
               } catch (e) {
                 debugPrint('❌ FavoriteScreen: Failed to save favorite status: $e');

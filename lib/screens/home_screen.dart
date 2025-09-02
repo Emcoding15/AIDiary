@@ -4,6 +4,7 @@ import 'package:wave/wave.dart';
 import 'package:wave/config.dart';
 import '../models/journal_entry.dart';
 import '../services/firebase_service.dart';
+import '../services/refresh_manager.dart';
 import '../config/theme.dart';
 
 import 'record_screen.dart';
@@ -28,7 +29,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => HomeScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin, RefreshableScreen {
   late AnimationController _gradientController;
   late Animation<double> _gradientAnimation;
   late Animation<Color?> _color1;
@@ -81,6 +82,13 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
   void dispose() {
     _gradientController.dispose();
     super.dispose();
+  }
+
+  // Implement the RefreshableScreen mixin method
+  @override
+  void onRefresh() {
+    debugPrint('🔄 HomeScreen: Global refresh triggered');
+    loadEntries();
   }
 
   Future<void> loadEntries() async {
@@ -300,8 +308,8 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
         try {
           debugPrint('💾 HomeScreen: Saving favorite status to Firestore...');
           await FirebaseService().saveJournalEntry(updatedEntry);
-          debugPrint('✅ HomeScreen: Favorite status saved, reloading entries...');
-          await loadEntries();
+          debugPrint('✅ HomeScreen: Favorite status saved, refreshing all screens...');
+          RefreshManager.refreshAfterFavoriteToggle();
         } catch (e) {
           debugPrint('❌ HomeScreen: Failed to save favorite status: $e');
         }
