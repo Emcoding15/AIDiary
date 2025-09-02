@@ -14,6 +14,7 @@ import '../widgets/journal_entry_card.dart';
 import '../widgets/stats_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/record_entry_fab.dart';
+import '../widgets/search_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(JournalEntry entry)? onEntryTap;
@@ -211,6 +212,9 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                     ),
                   ),
                   const SizedBox(height: 20),
+                  // Search widget
+                  const SearchWidget(),
+                  const SizedBox(height: 8),
                   if (_entries.isNotEmpty)
                     StatsCard(
                       totalEntries: _entries.length,
