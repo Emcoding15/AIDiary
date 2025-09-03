@@ -74,7 +74,7 @@ flutter_native_splash:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/aid_logo.png"
+  image_path: "assets/aid_icon_logo.png"
 
 
   flutter_test:
