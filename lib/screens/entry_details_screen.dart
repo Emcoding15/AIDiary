@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 import '../services/firebase_service.dart';
 import '../widgets/entry_header.dart';
 import '../widgets/notes_section.dart';
+import '../utils/snackbar_utils.dart';
 
 class EntryDetailsScreen extends StatefulWidget {
   final JournalEntry entry;
@@ -275,28 +276,12 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
       
       // Show subtle feedback
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Notes saved automatically'),
-            backgroundColor: AppTheme.successGreen.withOpacity(0.8),
-            duration: const Duration(milliseconds: 800), // Shorter duration
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        );
+        SnackBarUtils.showInfo(context, 'Notes saved automatically');
       }
     } catch (e) {
       debugPrint('❌ EntryDetailsScreen: Failed to auto-save notes: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to auto-save notes: $e'),
-            backgroundColor: AppTheme.errorColor,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        SnackBarUtils.showError(context, 'Failed to auto-save notes: $e');
       }
     } finally {
       setState(() {
@@ -319,16 +304,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
   Future<void> _transcribeAndSummarize() async {
   final audioPath = widget.entry.audioPath;
   if (audioPath == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('No audio file available to transcribe and summarize'),
-        backgroundColor: AppTheme.errorColor,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-        ),
-      ),
-    );
+    SnackBarUtils.showError(context, 'No audio file available to transcribe and summarize');
     return;
   }
 
@@ -362,16 +338,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
       );
   
       widget.onEntryUpdated?.call(updatedEntry);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Transcription and summary completed successfully'),
-          backgroundColor: AppTheme.successGreen,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-          ),
-        ),
-      );
+      SnackBarUtils.showSuccess(context, 'Transcription and summary completed successfully');
     }
   } catch (e) {
     if (mounted) {
@@ -379,16 +346,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
         _isTranscribing = false;
         _isGeneratingSummary = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: AppTheme.errorColor,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-          ),
-        ),
-      );
+      SnackBarUtils.showError(context, 'Error: ${e.toString()}');
     }
   }
 }
@@ -446,12 +404,7 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                   }
                 } catch (e) {
                   debugPrint('❌ EntryDetailsScreen: Failed to delete entry: $e');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to delete entry: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+                  SnackBarUtils.showError(context, 'Failed to delete entry: $e');
                 }
               }
             },
@@ -536,22 +489,12 @@ class _EntryDetailsScreenState extends State<EntryDetailsScreen> with SingleTick
                       debugPrint('✅ EntryDetailsScreen: Notes saved successfully to Firestore');
                       
                       widget.onEntryUpdated?.call(updatedEntry);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Notes saved successfully'),
-                          backgroundColor: AppTheme.successGreen,
-                        ),
-                      );
+                      SnackBarUtils.showSuccess(context, 'Notes saved successfully');
                       // Don't pop - let user stay on screen with auto-save
                       debugPrint('✅ EntryDetailsScreen: Manual save completed, staying on screen');
                     } catch (e) {
                       debugPrint('❌ EntryDetailsScreen: Failed to save notes: $e');
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Failed to save notes: $e'),
-                          backgroundColor: AppTheme.errorColor,
-                        ),
-                      );
+                      SnackBarUtils.showError(context, 'Failed to save notes: $e');
                     } finally {
                       debugPrint('🏁 EntryDetailsScreen: Notes save operation completed');
                       setState(() {

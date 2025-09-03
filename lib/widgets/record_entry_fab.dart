@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../screens/record_screen.dart';
 import '../models/journal_entry.dart';
+import '../utils/snackbar_utils.dart';
 
 class RecordEntryFAB extends StatelessWidget {
   final BuildContext parentContext;
@@ -46,32 +47,12 @@ class RecordEntryFAB extends StatelessWidget {
           if (result != null && result is JournalEntry) {
             if (onEntryAdded != null) onEntryAdded!(result);
             if (parentContext.mounted) {
-              ScaffoldMessenger.of(parentContext).showSnackBar(
-                SnackBar(
-                  content: const Text('Journal entry saved successfully!'),
-                  backgroundColor: AppTheme.successGreen,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                  ),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
+              SnackBarUtils.showEntrySaved(parentContext);
             }
           } else if (result == true) {
             if (onEntryDeleted != null) onEntryDeleted!();
             if (parentContext.mounted) {
-              ScaffoldMessenger.of(parentContext).showSnackBar(
-                SnackBar(
-                  content: const Text('Journal entry deleted.'),
-                  backgroundColor: Colors.red,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                  ),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
+              SnackBarUtils.showEntryDeleted(parentContext);
             }
           }
         },

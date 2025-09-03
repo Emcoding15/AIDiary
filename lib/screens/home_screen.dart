@@ -6,6 +6,7 @@ import '../models/journal_entry.dart';
 import '../services/firebase_service.dart';
 import '../services/refresh_manager.dart';
 import '../config/theme.dart';
+import '../utils/snackbar_utils.dart';
 
 import 'record_screen.dart';
 import 'entry_details_screen.dart';
@@ -274,17 +275,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
         debugPrint('🗑️ HomeScreen: Entry deleted callback triggered for ${entry.id}');
         // Refresh handled by global refresh manager in EntryDetailsScreen
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Journal entry deleted.'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-              ),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+          SnackBarUtils.showEntryDeleted(context);
         }
       },
       onFavoriteToggle: (isFavorite) async {

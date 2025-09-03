@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/journal_entry.dart';
 import '../services/firebase_service.dart';
 import '../services/refresh_manager.dart';
+import '../utils/snackbar_utils.dart';
 
 class EntryHeader extends StatefulWidget {
   final JournalEntry entry;
@@ -41,9 +42,7 @@ class _EntryHeaderState extends State<EntryHeader> {
   Future<void> _saveTitle() async {
     final newTitle = _titleController.text.trim();
     if (newTitle.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Title cannot be empty')),
-      );
+      SnackBarUtils.showError(context, 'Title cannot be empty');
       return;
     }
 
@@ -76,15 +75,11 @@ class _EntryHeaderState extends State<EntryHeader> {
       RefreshManager.refreshAllScreens();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Title updated successfully')),
-        );
+        SnackBarUtils.showTitleUpdated(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating title: $e')),
-        );
+        SnackBarUtils.showError(context, 'Error updating title: $e');
       }
     }
   }

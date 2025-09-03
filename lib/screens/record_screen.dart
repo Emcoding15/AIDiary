@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 import '../config/theme.dart';
 import '../services/firebase_service.dart';
 import '../config/api_config.dart';
+import '../utils/snackbar_utils.dart';
 
 class RecordScreen extends StatefulWidget {
   const RecordScreen({Key? key}) : super(key: key);
@@ -70,16 +71,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
     final hasPermission = await _recordingService.checkPermission();
     if (!hasPermission) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Microphone permission is required to record audio'),
-            backgroundColor: AppTheme.errorColor,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-            ),
-          ),
-        );
+        SnackBarUtils.showError(context, 'Microphone permission is required to record audio');
       }
     }
   }
@@ -109,31 +101,15 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
             if (_recordingDuration >= _maxTimeLimit) {
               // Auto-stop recording at max time limit
               _stopRecording();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Recording stopped: 9 minute maximum reached'),
-                  backgroundColor: AppTheme.warningAmber,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                  ),
-                ),
-              );
+              SnackBarUtils.showWarning(context, 'Recording stopped: 9 minute maximum reached');
             } else if (_recordingDuration >= _warningTimeLimit && !_showWarning) {
               // Show warning at warning time limit
               setState(() {
                 _showWarning = true;
               });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Recording approaching 9 minute limit. For best results, keep recordings under 8 minutes.'),
-                  backgroundColor: AppTheme.warningAmber,
-                  duration: const Duration(seconds: 5),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                  ),
-                ),
+              SnackBarUtils.showWarning(
+                context, 
+                'Recording approaching 9 minute limit. For best results, keep recordings under 8 minutes.',
               );
             }
           }
@@ -200,16 +176,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
       _startTimer();
       _micAnimationController.forward();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to start recording: ${e.toString()}'),
-          backgroundColor: AppTheme.errorColor,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-          ),
-        ),
-      );
+      SnackBarUtils.showError(context, 'Failed to start recording: ${e.toString()}');
     }
   }
 
@@ -224,16 +191,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
     });
     _micAnimationController.reverse();
     if (showSnackBar && path != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Recording saved successfully'),
-          backgroundColor: AppTheme.successGreen,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-          ),
-        ),
-      );
+      SnackBarUtils.showSuccess(context, 'Recording saved successfully');
     }
   }
 
@@ -263,16 +221,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
       final audioPath = _recordingService.currentFilePath;
       if (audioPath == null) {
         print('DEBUG: No recording found to save');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('No recording found to save'),
-            backgroundColor: AppTheme.errorColor,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-            ),
-          ),
-        );
+        SnackBarUtils.showError(context, 'No recording found to save');
         return;
       }
 
@@ -293,13 +242,11 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
           Navigator.of(context).pop(); // Remove loading dialog
           final apiKey = await ApiConfig.getGoogleAiApiKey();
           final isApiKeyMissing = apiKey == null || apiKey.trim().isEmpty;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(isApiKeyMissing
-                  ? 'Please set your API key in Settings before transcribing.'
-                  : 'Transcription failed due to a network or AI service error. Please try again.'),
-              backgroundColor: AppTheme.errorColor,
-            ),
+          SnackBarUtils.showError(
+            context,
+            isApiKeyMissing
+                ? 'Please set your API key in Settings before transcribing.'
+                : 'Transcription failed due to a network or AI service error. Please try again.',
           );
           return;
         }
@@ -307,24 +254,14 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
         print('DEBUG: Error during transcription: $e');
         print(stack);
         Navigator.of(context).pop(); // Remove loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to transcribe audio: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        SnackBarUtils.showError(context, 'Failed to transcribe audio: $e');
         return;
       }
 
       if (result['transcription'] == null || (result['transcription']?.isEmpty ?? true)) {
         Navigator.of(context).pop(); // Remove loading dialog
         print('DEBUG: Transcription result is null or empty');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Failed to transcribe audio.'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        SnackBarUtils.showError(context, 'Failed to transcribe audio.');
         return;
       }
       final transcription = result['transcription']!;
@@ -350,17 +287,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
         print('DEBUG: Entry saved to Firestore!');
         // Show success SnackBar before popping
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Journal entry saved successfully!'),
-              backgroundColor: AppTheme.successGreen,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-              ),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+          SnackBarUtils.showSuccess(context, 'Journal entry saved successfully!');
           // Wait a short moment to ensure SnackBar is visible
           await Future.delayed(const Duration(milliseconds: 400));
         }
@@ -371,12 +298,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
         print(stack);
         // Show error SnackBar before popping if still mounted
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to save entry to Firestore: $e'),
-              backgroundColor: AppTheme.errorColor,
-            ),
-          );
+          SnackBarUtils.showError(context, 'Failed to save entry to Firestore: $e');
           await Future.delayed(const Duration(milliseconds: 400));
         }
         Navigator.of(context).pop(); // Remove loading dialog
@@ -384,12 +306,7 @@ class _RecordScreenState extends State<RecordScreen> with TickerProviderStateMix
     } catch (e, stack) {
       print('DEBUG: Unexpected error in _saveRecording: $e');
       print(stack);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Unexpected error: $e'),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
+      SnackBarUtils.showError(context, 'Unexpected error: $e');
     }
   }
 

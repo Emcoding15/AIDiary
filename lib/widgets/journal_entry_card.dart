@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/journal_entry.dart';
 import '../screens/entry_details_screen.dart';
 import '../config/theme.dart';
+import '../utils/snackbar_utils.dart';
 import 'package:intl/intl.dart';
 
 class JournalEntryCard extends StatelessWidget {
@@ -116,6 +117,11 @@ class JournalEntryCard extends StatelessWidget {
                                       onPressed: () {
                                         if (onFavoriteToggle != null) {
                                           onFavoriteToggle!(!entry.isFavorite);
+                                          if (!entry.isFavorite) {
+                                            SnackBarUtils.showFavoriteAdded(context);
+                                          } else {
+                                            SnackBarUtils.showFavoriteRemoved(context);
+                                          }
                                         }
                                       },
                                     ),

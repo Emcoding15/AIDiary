@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/settings_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../utils/snackbar_utils.dart';
 
 /// Settings screen for entering and saving the API key
 class SettingsScreen extends StatefulWidget {
@@ -40,9 +41,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() {
         _error = null;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('API key saved successfully.')),
-      );
+      SnackBarUtils.showSuccess(context, 'API key saved successfully');
     }
   }
 

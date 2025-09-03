@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/journal_entry.dart';
 import '../services/search_service.dart';
 import '../widgets/entry_card.dart';
+import '../utils/snackbar_utils.dart';
 import 'entry_details_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -96,9 +97,7 @@ class _SearchScreenState extends State<SearchScreen> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Search failed: $e')),
-        );
+        SnackBarUtils.showError(context, 'Search failed: $e');
       }
     }
   }

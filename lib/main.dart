@@ -6,6 +6,7 @@ import 'screens/calendar_screen.dart';
 import 'models/journal_entry.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'config/theme.dart';
+import 'utils/snackbar_utils.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -148,17 +149,7 @@ class _AIDiaryAppState extends State<AIDiaryApp> with SingleTickerProviderStateM
 
       // Show a confirmation message
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Journal entry saved successfully!'),
-            backgroundColor: AppTheme.successGreen,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-            ),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        SnackBarUtils.showSuccess(context, 'Journal entry saved successfully!');
       }
     }
   }

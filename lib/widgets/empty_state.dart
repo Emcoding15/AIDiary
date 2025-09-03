@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../models/journal_entry.dart';
 import '../screens/record_screen.dart';
+import '../utils/snackbar_utils.dart';
 
 class EmptyState extends StatelessWidget {
   final String? message;
@@ -55,17 +56,7 @@ class EmptyState extends StatelessWidget {
                 ),
               );
               if (result != null && result is JournalEntry) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Journal entry saved successfully!'),
-                    backgroundColor: AppTheme.successGreen,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
-                    ),
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
+                SnackBarUtils.showEntrySaved(context);
               }
             },
             icon: const Icon(Icons.mic_rounded),
