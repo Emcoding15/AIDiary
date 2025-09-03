@@ -153,9 +153,15 @@ class CalendarScreenState extends State<CalendarScreen> with RefreshableScreen {
                 shape: BoxShape.circle,
               ),
             ),
-            headerStyle: const HeaderStyle(
-              formatButtonTextStyle: TextStyle(fontSize: 14),
-              titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            headerStyle: HeaderStyle(
+              formatButtonTextStyle: TextStyle(fontSize: 14, color: Colors.white),
+              titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
+              rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
+              formatButtonDecoration: BoxDecoration(
+                border: Border.all(color: Colors.white, width: 1.5),
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+              ),
             ),
           ),
           Padding(
