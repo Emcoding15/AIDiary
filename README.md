@@ -1,4 +1,3 @@
-
 # 🎙️ AI Diary
 
 > An AI-powered, voice-first journal app that transforms your spoken thoughts into organized, searchable diary entries.
@@ -55,10 +54,9 @@ You can record your diary entries in any of these languages, and the app will au
 - **Google Sign-In:** Easy authentication with your Google account
 - **Privacy-First:** Your data is encrypted and only accessible to you
 
-### 🌐 **Cross-Platform Support**
-- **Mobile:** Native Android and iOS apps
-- **Web:** Progressive Web App for browsers
-- **Desktop:** Windows, macOS, and Linux support
+### 🌐 **Platform Support**
+- **Mobile:** Currently tested and supported on Android
+- **Other Platforms:** iOS, Web, and Desktop builds are planned, but not yet tested or officially supported. Community contributions and feedback for these platforms are welcome!
 
 ## 🏗️ Architecture & Project Structure
 
