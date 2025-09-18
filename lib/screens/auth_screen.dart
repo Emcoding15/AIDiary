@@ -194,7 +194,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Google Sign-In button
+              // Google Sign-In button (logo only, adjusted border radius)
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -205,19 +205,13 @@ class _AuthScreenState extends State<AuthScreen> {
                     side: const BorderSide(color: Color(0xFFE0E0E0), width: 1.2),
                     backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     padding: EdgeInsets.zero,
                   ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: double.infinity,
-                    child: Image.asset(
-                      'assets/google_logo.png',
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
+                  child: Image.asset(
+                    'assets/google_logo.png',
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
