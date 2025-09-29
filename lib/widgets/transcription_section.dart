@@ -80,7 +80,7 @@ class TranscriptionSection extends StatelessWidget {
                     color: Theme.of(context).dividerColor,
                   ),
                 ),
-                child: Text(
+                child: SelectableText(
                   transcription!,
                   style: Theme.of(context).textTheme.bodyMedium,
                   textAlign: TextAlign.justify,
