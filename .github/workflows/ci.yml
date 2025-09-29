@@ -16,4 +16,8 @@ jobs:
           flutter-version: '3.35.4'
       - run: flutter pub get
       - run: flutter test
+      - name: Install Android NDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends android-ndk
       - run: flutter build apk
