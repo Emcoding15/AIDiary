@@ -8,7 +8,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_core_platform_interface/firebase_core_platform_interface.dart';
 import 'package:flutter/services.dart';
 
 import 'package:audio_journal/main.dart';
@@ -17,8 +16,10 @@ void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
 
+    // Mock the FirebaseCoreHostApi platform channel for CI/CD
+    const channel = MethodChannel('dev.flutter.pigeon.firebase_core_platform_interface.FirebaseCoreHostApi');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-      const MethodChannel('plugins.flutter.io/firebase_core'),
+      channel,
       (methodCall) async {
         if (methodCall.method == "initializeCore") {
           return <String, dynamic>{'app': {'name': 'app', 'options': {}}};
