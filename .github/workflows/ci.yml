@@ -14,6 +14,8 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.4'
+      - name: Clear Gradle cache
+        run: rm -rf ~/.gradle/caches/
       - run: flutter clean
       - run: flutter pub get
       - run: flutter test
