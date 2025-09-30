@@ -18,6 +18,5 @@ jobs:
       - run: flutter test
       - name: Install Android NDK
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends android-ndk
+          yes | $ANDROID_HOME/tools/bin/sdkmanager --install "ndk;27.0.12077973"
       - run: flutter build apk
