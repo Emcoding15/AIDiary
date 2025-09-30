@@ -27,7 +27,6 @@ jobs:
           unzip cmdline-tools.zip -d latest
       - name: Install Android NDK
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;27.0.12077973"
-      - run: flutter build apk
       # Securely handle Android keystore and key.properties
       - name: Decode Keystore from Secret
         if: env.KEYSTORE_BASE64 != null
