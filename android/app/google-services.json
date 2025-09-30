@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "164765566610-vt9pucovus724pkp5u289qf21i94mo2f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.audio_journal",
+            "certificate_hash": "a0e4a069ddaf31e80c337ab864c4a71e079886c9"
+          }
+        },
+        {
           "client_id": "164765566610-5kh7cib8rfuhc37fvpujf2qfnc21c2d9.apps.googleusercontent.com",
           "client_type": 3
         }

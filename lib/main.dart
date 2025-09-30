@@ -19,8 +19,13 @@ import 'services/refresh_manager.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp();
+  // Initialize Firebase with error handling
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    print('Firebase initialization error: $e');
+    // Continue with app initialization even if Firebase fails
+  }
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
