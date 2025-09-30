@@ -1,7 +1,8 @@
 buildscript {
     repositories {
-        google()
-        mavenCentral()
+           google()
+           mavenCentral()
+           maven { url = uri("https://artifacts.arthenica.com/repository/android") }
     }
     dependencies {
         classpath("com.google.gms:google-services:4.3.15")
@@ -10,9 +11,10 @@ buildscript {
 
 allprojects {
     repositories {
-        google()
-        mavenCentral()
-        maven { url = uri("https://jitpack.io") }
+           google()
+           mavenCentral()
+           maven { url = uri("https://jitpack.io") }
+           maven { url = uri("https://artifacts.arthenica.com/repository/android") }
     }
 }
 
