@@ -28,3 +28,21 @@ jobs:
       - name: Install Android NDK
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;27.0.12077973"
       - run: flutter build apk
+      # Securely handle Android keystore and key.properties
+      - name: Decode Keystore from Secret
+        if: env.KEYSTORE_BASE64 != null
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release-keystore.jks
+      - name: Write key.properties from Secrets
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEYSTORE_PATH: android/app/release-keystore.jks
+        run: |
+          echo "storeFile=$KEYSTORE_PATH" > android/key.properties
+          echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
+          echo "keyPassword=$KEYSTORE_PASSWORD" >> android/key.properties
+          echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+      - run: flutter build apk --release

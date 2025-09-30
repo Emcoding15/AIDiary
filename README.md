@@ -206,6 +206,61 @@ flutter build macos --release
 flutter build linux --release
 ```
 
+## 🚀 Android Release Build & Firebase Setup
+
+To build and distribute a signed release APK for Android, follow these steps:
+
+### 1. Generate a Release Keystore
+- Run the following command in your project directory:
+  ```powershell
+  keytool -genkey -v -keystore android/app/key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-key-alias
+  ```
+- Use a secure password and remember your alias.
+
+### 2. Create `key.properties`
+- In the `android` folder, create a file named `key.properties`:
+  ```properties
+  storeFile=key.jks
+  storePassword=your_keystore_password
+  keyAlias=my-key-alias
+  keyPassword=your_keystore_password
+  ```
+- Add `android/key.properties` to `.gitignore` to keep it private.
+
+### 3. Register Your Release SHA-1 in Firebase
+- Get your release SHA-1 fingerprint:
+  ```powershell
+  keytool -list -v -keystore android/app/key.jks -alias my-key-alias
+  ```
+- Go to Firebase Console → Project Settings → Your App, and add the new SHA-1.
+- Download the updated `google-services.json` and replace the old file in `android/app/`.
+
+### 4. Update Gradle for Release Signing
+- Ensure your `android/app/build.gradle.kts` loads keystore info from `key.properties` and uses it for release signing.
+- Disable minification if you encounter issues with Firebase or plugins:
+  ```kotlin
+  buildTypes {
+      release {
+          signingConfig = signingConfigs.getByName("release")
+          isMinifyEnabled = false
+          isShrinkResources = false
+      }
+  }
+  ```
+
+### 5. Build and Test
+- Run:
+  ```powershell
+  flutter clean
+  flutter build apk --release
+  ```
+- Install the APK on your device and test all features, especially authentication and cloud sync.
+
+### 6. Troubleshooting
+- Use `adb logcat` to monitor logs and debug issues.
+- If Google Sign-In fails, double-check your SHA-1 and `google-services.json`.
+- Keep both debug and release SHA-1 fingerprints registered in Firebase for development and production builds.
+
 ## 🔄 How It Works
 
 ### **1. Voice Recording Pipeline**
