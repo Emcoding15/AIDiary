@@ -16,7 +16,12 @@ jobs:
           flutter-version: '3.35.4'
       - run: flutter pub get
       - run: flutter test
-      - name: Install Android NDK
+      - name: Install Android SDK Command Line Tools
         run: |
-          yes | $ANDROID_HOME/tools/bin/sdkmanager --install "ndk;27.0.12077973"
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          cd $ANDROID_HOME/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+          unzip cmdline-tools.zip -d latest
+      - name: Install Android NDK
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;27.0.12077973"
       - run: flutter build apk
