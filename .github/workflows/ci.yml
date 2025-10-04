@@ -2,9 +2,8 @@ name: Flutter CI
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    tags:
+      - 'v*'   # Trigger when pushing a version tag (e.g., v1.0.0)
 
 jobs:
   build:
@@ -43,13 +42,15 @@ jobs:
           echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
           echo "keyPassword=$KEYSTORE_PASSWORD" >> android/key.properties
           echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+
       - run: flutter build apk --release
-      - name: Upload APK to Website API
+
+      # Create GitHub Release & Upload APK
+      - name: Upload APK to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/app/outputs/flutter-apk/app-release.apk
         env:
-          API_TOKEN: ${{ secrets.APK_UPLOAD_TOKEN }}
-        run: |
-          curl -X POST https://em-coding.me/api/upload-apk \
-            -H "Authorization: Bearer $API_TOKEN" \
-            -F "file=@build/app/outputs/flutter-apk/app-release.apk"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       
